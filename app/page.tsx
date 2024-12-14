@@ -12,7 +12,6 @@ function formatDueDate(dateString: string | null) {
 
     try {
         const date = new Date(dateString);
-
         return new Intl.DateTimeFormat('en-US', {
             year: 'numeric',
             month: 'short',
@@ -51,9 +50,8 @@ export default function Home() {
 
                 if (response.status === 200)
                     setTasks(response.data);
-
             } catch (error) {
-                console.error('Error fetching tasks:', error);
+                alert('An error occurred while fetching tasks. Please try again later.');
             } finally {
                 setLoading(false);
             }
@@ -70,13 +68,11 @@ export default function Home() {
 
             const response = await axios.delete(`https://localhost:7025/api/task/${taskId}`, { httpsAgent });
 
-            if (response.status === 204) 
+            if (response.status === 204)
                 setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
-            else 
+            else
                 alert('Failed to delete the task.');
-            
         } catch (error) {
-            console.error('Error deleting task:', error);
             alert('An error occurred while deleting the task.');
         }
     };
