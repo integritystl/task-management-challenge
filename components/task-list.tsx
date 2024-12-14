@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useEffect } from 'react';
 import { TaskCard } from './task-card';
 import { Task } from '@/lib/db';
 

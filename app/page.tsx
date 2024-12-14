@@ -1,22 +1,10 @@
-import { TaskList } from '@/components/task-list';
+'use client';
+
+import { useEffect, useState } from 'react';
 import { CreateTaskButton } from '@/components/create-task-button';
 import { EditTaskButton } from '@/components/update-task-button';
-
 import axios from 'axios';
 import https from 'https';
-
-async function getTasks() {
-    const httpsAgent = new https.Agent({
-        rejectUnauthorized: false,
-    });
-
-    const response = await axios.get('https://localhost:7025/api/task', { httpsAgent });
-
-    if (response.status !== 200)
-        throw new Error(`Failed to fetch tasks: ${response.statusText}`);
-
-    return response.data;
-}
 
 function formatDueDate(dateString: string | null) {
     if (!dateString) return 'No due date';
@@ -47,8 +35,53 @@ function getStatusBadge(status: string) {
     }
 }
 
-export default async function Home() {
-    const tasks = await getTasks();
+export default function Home() {
+    const [tasks, setTasks] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        async function fetchTasks() {
+            try {
+                const httpsAgent = new https.Agent({
+                    rejectUnauthorized: false,
+                });
+
+                const response = await axios.get('https://localhost:7025/api/task', { httpsAgent });
+
+                if (response.status === 200)
+                    setTasks(response.data);
+
+            } catch (error) {
+                console.error('Error fetching tasks:', error);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        fetchTasks();
+    }, []);
+
+    const handleDelete = async (taskId: string) => {
+        try {
+            const httpsAgent = new https.Agent({
+                rejectUnauthorized: false,
+            });
+
+            const response = await axios.delete(`https://localhost:7025/api/task/${taskId}`, { httpsAgent });
+
+            if (response.status === 204) { 
+                setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
+            } else {
+                alert('Failed to delete the task.');
+            }
+        } catch (error) {
+            console.error('Error deleting task:', error);
+            alert('An error occurred while deleting the task.');
+        }
+    };
+
+    if (loading)
+        return <p>Loading tasks...</p>;
 
     return (
         <main className="container mx-auto p-4">
@@ -73,7 +106,14 @@ export default async function Home() {
                             <p className="text-gray-600 mb-4">
                                 Due Date: {formatDueDate(task.dueDate)}
                             </p>
-                            <EditTaskButton task={task} />
+                            <div className="flex gap-2">
+                                <EditTaskButton task={task} />
+                                <button
+                                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                                    onClick={() => handleDelete(task.id)}>
+                                    Delete
+                                </button>
+                            </div>
                         </div>
                     );
                 })}
