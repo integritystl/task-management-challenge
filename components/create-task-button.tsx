@@ -107,8 +107,7 @@ export function CreateTaskButton() {
                                     target: { value, name: 'priority' },
                                 })
                             }
-                            defaultValue="MEDIUM"
-                        >
+                            defaultValue="MEDIUM">
                             <SelectTrigger>
                                 <SelectValue placeholder="Select priority" />
                             </SelectTrigger>
