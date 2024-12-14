@@ -47,27 +47,30 @@ export function CreateTaskButton() {
     },
   });
 
-  const onSubmit = async (data: TaskFormData) => {
+const onSubmit = async (data: TaskFormData) => {
     try {
+        const taskData = {
+            ...data,
+            dueDate: data.dueDate || null,
+        };
+
         const response = await fetch('https://localhost:7025/api/task', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(taskData),
+        });
 
-      if (!response.ok) {
-        throw new Error('Failed to create task');
-      }
+        reset();
+        setOpen(false);
 
-      reset();
-      setOpen(false);
-      window.location.reload();
-    } catch (error) {
-      console.error('Error creating task:', error);
+        window.location.reload();
     }
-  };
+    catch (error) {
+        console.error('Error creating task:', error);
+    }
+};
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
