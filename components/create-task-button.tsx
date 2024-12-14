@@ -40,6 +40,7 @@ type TaskFormData = z.infer<typeof taskSchema>;
 export function CreateTaskButton() {
     const [open, setOpen] = useState(false);
     const { register, handleSubmit, reset, formState: { errors } } = useForm<TaskFormData>({
+
         resolver: zodResolver(taskSchema),
         defaultValues: {
             priority: 'MEDIUM',
@@ -65,6 +66,7 @@ export function CreateTaskButton() {
             reset();
             setOpen(false);
             window.location.reload();
+
         } catch (error) {
             console.error('Error creating task:', error);
         }

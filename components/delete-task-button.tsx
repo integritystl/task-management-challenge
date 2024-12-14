@@ -17,13 +17,12 @@ export function DeleteTaskButton({ taskId, onTaskDeleted }: { taskId: string; on
                 method: 'DELETE',
             });
 
-            if (response.ok) {
+            if (response.ok)
                 onTaskDeleted();
-            } else {
+            else
                 alert('Failed to delete the task.');
-            }
+
         } catch (error) {
-            console.error('Error deleting task:', error);
             alert('An error occurred while deleting the task.');
         } finally {
             setIsDeleting(false);
@@ -33,7 +32,9 @@ export function DeleteTaskButton({ taskId, onTaskDeleted }: { taskId: string; on
     return (
         <Button onClick={handleDelete} disabled={isDeleting} variant="destructive">
             <Trash className="mr-2 h-4 w-4" />
-            {isDeleting ? 'Deleting...' : 'Delete Task'}
+            {isDeleting
+                ? 'Deleting...'
+                : 'Delete Task'}
         </Button>
     );
 }
