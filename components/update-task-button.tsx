@@ -46,11 +46,9 @@ export function EditTaskButton({ task }: { task: any }) {
                 window.location.reload();
             } else {
                 const errorData = await response.json();
-                console.error('Failed to update task:', errorData);
                 alert(errorData.message || 'Failed to update the task.');
             }
         } catch (error) {
-            console.error('Error updating task:', error);
             alert('An error occurred while updating the task.');
         }
     };
@@ -88,8 +86,7 @@ export function EditTaskButton({ task }: { task: any }) {
                         <Label htmlFor="priority">Priority</Label>
                         <Select
                             onValueChange={(value) =>
-                                setUpdatedTask((prev: any) => ({ ...prev, priority: value }))
-                            }
+                                setUpdatedTask((prev: any) => ({ ...prev, priority: value }))}
                             defaultValue={updatedTask.priority}>
                             <SelectTrigger>
                                 <SelectValue placeholder="Select priority" />
@@ -107,10 +104,8 @@ export function EditTaskButton({ task }: { task: any }) {
                         <Label htmlFor="status">Status</Label>
                         <Select
                             onValueChange={(value) =>
-                                setUpdatedTask((prev: any) => ({ ...prev, status: value }))
-                            }
-                            defaultValue={updatedTask.status}
-                        >
+                                setUpdatedTask((prev: any) => ({ ...prev, status: value }))}
+                            defaultValue={updatedTask.status}>
                             <SelectTrigger>
                                 <SelectValue placeholder="Select status" />
                             </SelectTrigger>
@@ -130,8 +125,7 @@ export function EditTaskButton({ task }: { task: any }) {
                             id="dueDate"
                             name="dueDate"
                             value={updatedTask.dueDate || ''}
-                            onChange={handleInputChange}
-                        />
+                            onChange={handleInputChange} />
                     </div>
                     <Button onClick={handleUpdate} className="w-full">
                         Update Task
