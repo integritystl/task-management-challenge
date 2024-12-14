@@ -1,5 +1,4 @@
 'use client';
-
 import { useState } from 'react';
 import { Trash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,7 +7,8 @@ export function DeleteTaskButton({ taskId, onTaskDeleted }: { taskId: string; on
     const [isDeleting, setIsDeleting] = useState(false);
 
     const handleDelete = async () => {
-        if (!confirm('Are you sure you want to delete this task?')) return;
+        if (!confirm('Are you sure you want to delete this task?'))
+            return;
 
         try {
             setIsDeleting(true);
@@ -21,7 +21,6 @@ export function DeleteTaskButton({ taskId, onTaskDeleted }: { taskId: string; on
                 onTaskDeleted();
             else
                 alert('Failed to delete the task.');
-
         } catch (error) {
             alert('An error occurred while deleting the task.');
         } finally {
