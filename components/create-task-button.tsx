@@ -47,18 +47,17 @@ export function CreateTaskButton() {
     },
   });
 
-const onSubmit = async (data: TaskFormData) => {
-  try {
-    const taskData = {
-      ...data,
-      dueDate: data.dueDate || null,
-    };
+  const onSubmit = async (data: TaskFormData) => {
+    try {
+      const taskData = { ...data,
+        dueDate: data.dueDate || null,
+      };
 
-    const response = await fetch('https://localhost:7025/api/task', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+  const response = await fetch('https://localhost:7025/api/task', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
       body: JSON.stringify(taskData),
     });
 
