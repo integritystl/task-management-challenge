@@ -23,16 +23,16 @@ function formatDueDate(dateString: string | null) {
 }
 
 function getStatusBadge(status: string) {
-    switch (status) {
-        case 'TODO':
-            return { label: 'To Do', className: 'badge bg-secondary' };
-        case 'IN_PROGRESS':
-            return { label: 'In Progress', className: 'badge bg-warning text-dark' };
-        case 'DONE':
-            return { label: 'Done', className: 'badge bg-success' };
-        default:
-            return { label: status, className: 'badge bg-light text-dark' };
-    }
+    if (status === 'TODO')
+        return { label: 'To Do', className: 'badge bg-secondary' };
+
+    if (status === 'IN_PROGRESS')
+        return { label: 'In Progress', className: 'badge bg-warning text-dark' };
+
+    if (status === 'DONE')
+        return { label: 'Done', className: 'badge bg-success' };
+
+    return { label: status, className: 'badge bg-light text-dark' };
 }
 
 export default function Home() {
