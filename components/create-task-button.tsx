@@ -65,12 +65,12 @@ const onSubmit = async (data: TaskFormData) => {
     if (!response.ok)
       throw new Error('Failed to create task');
 
-    reset();
-    setOpen(false);
-    window.location.reload();
-  } catch (error) {
-    console.error('Error creating task:', error);
-  }
+      reset();
+      setOpen(false);
+      window.location.reload();
+    } catch (error) {
+      console.error('Error creating task:', error);
+    }
 };
 
 return (
