@@ -18,7 +18,7 @@ export async function POST(request: Request) {
       },
     });
 
-      return NextResponse.json(task);
+    return NextResponse.json(task);
   } catch (error) {
       return NextResponse.json(
           { error: 'Failed to create task' },
