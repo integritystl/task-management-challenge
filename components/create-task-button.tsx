@@ -5,21 +5,21 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@/components/ui/select';
 import { PlusCircle } from 'lucide-react';
 
@@ -27,11 +27,11 @@ const PRIORITIES = ['LOW', 'MEDIUM', 'HIGH'] as const;
 const STATUSES = ['TODO', 'IN_PROGRESS', 'DONE'] as const;
 
 const taskSchema = z.object({
-    title: z.string().min(1, 'Title is required'),
-    description: z.string().optional(),
-    priority: z.enum(PRIORITIES),
-    status: z.enum(STATUSES),
-    dueDate: z.string().optional(),
+  title: z.string().min(1, 'Title is required'),
+  description: z.string().optional(),
+  priority: z.enum(PRIORITIES),
+  status: z.enum(STATUSES),
+  dueDate: z.string().optional(),
 });
 
 type TaskFormData = z.infer<typeof taskSchema>;
