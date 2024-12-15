@@ -35,6 +35,19 @@ function getStatusBadge(status: string) {
     return { label: status, className: 'badge bg-light text-dark' };
 }
 
+function getPriorityBadge(priority: string) {
+    if (priority === 'LOW')
+        return { label: 'Low', className: 'badge bg-blue-100 text-black' };
+
+    if (priority === 'MEDIUM')
+        return { label: 'Medium', className: 'badge bg-yellow-100 text-black' };
+
+    if (priority === 'HIGH')
+        return { label: 'High', className: 'badge bg-red-100 text-black' };
+
+    return { label: priority, className: 'badge bg-light text-dark' };
+}
+
 export default function Home() {
     const [tasks, setTasks] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -96,7 +109,12 @@ export default function Home() {
                             <p className="text-gray-600 mb-2">
                                 {task.description || 'No description provided'}
                             </p>
-                            <p className="text-gray-800 mb-2">Priority: {task.priority}</p>
+                            <p className="text-gray-800 mb-2">
+                                Priority:{' '}
+                                <span className={getPriorityBadge(task.priority).className}>
+                                    {getPriorityBadge(task.priority).label}
+                                </span>
+                            </p>
                             <p>
                                 <span className={className}>{label}</span>
                             </p>
