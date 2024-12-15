@@ -47,91 +47,89 @@ export function CreateTaskButton() {
       },
   });
 
-  const onSubmit = async (data: TaskFormData) => {
-      try {
-        const taskData = {
-        ...data,
-        dueDate: data.dueDate || null,
-      };
-
-            const response = await fetch('https://localhost:7025/api/task', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(taskData),
-            });
-
-            reset();
-            setOpen(false);
-            window.location.reload();
-
-        } catch (error) {
-            console.error('Error creating task:', error);
-        }
+const onSubmit = async (data: TaskFormData) => {
+  try {
+    const taskData = {
+      ...data,
+      dueDate: data.dueDate || null,
     };
 
-    return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                <Button>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Create Task
-                </Button>
-            </DialogTrigger>
+    const response = await fetch('https://localhost:7025/api/task', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(taskData),
+    });
 
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Create New Task</DialogTitle>
-                    <DialogDescription>
-                        Enter the details for your new task below.
-                    </DialogDescription>
-                </DialogHeader>
+    if (!response.ok)
+      throw new Error('Failed to create task');
 
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                    <div>
-                        <Label htmlFor="title">Title</Label>
-                        <Input id="title" {...register('title')} />
-                        {errors.title && <p className="text-red-500 text-sm">{errors.title.message}</p>}
-                    </div>
+    reset();
+    setOpen(false);
+    window.location.reload();
+  } catch (error) {
+    console.error('Error creating task:', error);
+  }
+};
 
-                    <div>
-                        <Label htmlFor="description">Description</Label>
-                        <Input id="description" {...register('description')} />
-                    </div>
-
-                    <div>
-                        <Label htmlFor="priority">Priority</Label>
-                        <Select
-                            onValueChange={(value) =>
-                                register('priority').onChange({
-                                    target: { value, name: 'priority' },
-                                })
-                            }
-                            defaultValue="MEDIUM">
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select priority" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {PRIORITIES.map((priority) => (
-                                    <SelectItem key={priority} value={priority}>
-                                        {priority}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                    <div>
-                        <Label htmlFor="dueDate">Due Date</Label>
-                        <Input type="date" id="dueDate" {...register('dueDate')} />
-                    </div>
-
-                    <Button type="submit" className="w-full">
-                        Create Task
-                    </Button>
-                </form>
-            </DialogContent>
-        </Dialog>
-    );
-}
+return (
+  <Dialog open={open} onOpenChange={setOpen}>
+    <DialogTrigger asChild>
+      <Button>
+        <PlusCircle className="mr-2 h-4 w-4" />
+        Create Task
+      </Button>
+    </DialogTrigger>
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>Create New Task</DialogTitle>
+        <DialogDescription>
+          Enter the details for your new task below.
+        </DialogDescription>
+      </DialogHeader>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div>
+          <Label htmlFor="title">Title</Label>
+          <Input id="title" {...register('title')} />
+          {errors.title && (
+            <p className="text-red-500 text-sm">{errors.title.message}</p>
+          )}
+        </div>
+        <div>
+          <Label htmlFor="description">Description</Label>
+          <Input id="description" {...register('description')} />
+        </div>
+        <div>
+          <Label htmlFor="priority">Priority</Label>
+          <Select
+            onValueChange={(value) =>
+              register('priority').onChange({
+                target: { value, name: 'priority' },
+              })
+            }
+            defaultValue="MEDIUM"
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select priority" />
+            </SelectTrigger>
+            <SelectContent>
+              {PRIORITIES.map((priority) => (
+                <SelectItem key={priority} value={priority}>
+                  {priority}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label htmlFor="dueDate">Due Date</Label>
+          <Input type="date" id="dueDate" {...register('dueDate')} />
+        </div>
+        <Button type="submit" className="w-full">
+          Create Task
+        </Button>
+      </form>
+    </DialogContent>
+  </Dialog>
+);
