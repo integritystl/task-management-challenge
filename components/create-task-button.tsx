@@ -37,15 +37,15 @@ const taskSchema = z.object({
 type TaskFormData = z.infer<typeof taskSchema>;
 
 export function CreateTaskButton() {
-    const [open, setOpen] = useState(false);
-    const { register, handleSubmit, reset, formState: { errors } } = useForm<TaskFormData>({
+  const [open, setOpen] = useState(false);
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<TaskFormData>({
 
-        resolver: zodResolver(taskSchema),
-        defaultValues: {
-            priority: 'MEDIUM',
-            status: 'TODO',
-        },
-    });
+      resolver: zodResolver(taskSchema),
+      defaultValues: {
+          priority: 'MEDIUM',
+          status: 'TODO',
+      },
+  });
 
     const onSubmit = async (data: TaskFormData) => {
         try {
