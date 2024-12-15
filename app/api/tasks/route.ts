@@ -4,19 +4,19 @@ import { prisma } from '@/lib/db';
 
 export async function POST(request: Request) {
   try {
-     const data = await request.json();
+    const data = await request.json();
 
-     const task = await prisma.task.create({
-         data: {
-             title: data.title,
-             description: data.description,
-             priority: data.priority,
-             status: data.status,
-             dueDate: data.dueDate
-                 ? new Date(data.dueDate)
-                 : null,
-         },
-     });
+    const task = await prisma.task.create({
+        data: {
+            title: data.title,
+            description: data.description,
+            priority: data.priority,
+            status: data.status,
+            dueDate: data.dueDate
+                ? new Date(data.dueDate)
+                : null,
+        },
+    });
 
       return NextResponse.json(task);
   } catch (error) {
