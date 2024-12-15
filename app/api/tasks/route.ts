@@ -30,10 +30,10 @@ export async function POST(request: Request) {
 export async function GET() {
   try {
     const tasks = await prisma.task.findMany({
-     orderBy: {
-     dueDate: 'asc',
-    },
-   });
+      orderBy: {
+      dueDate: 'asc',
+      },
+    });
 
     return NextResponse.json(tasks);
   } catch (error) {
