@@ -28,18 +28,18 @@ export async function POST(request: Request) {
 }
 
 export async function GET() {
-    try {
-        const tasks = await prisma.task.findMany({
-            orderBy: {
-                dueDate: 'asc',
-            },
-        });
+  try {
+    const tasks = await prisma.task.findMany({
+     orderBy: {
+     dueDate: 'asc',
+    },
+   });
 
-        return NextResponse.json(tasks);
-    } catch (error) {
-        return NextResponse.json(
-            { error: 'Failed to fetch tasks' },
-            { status: 500 }
-        );
-    }
+    return NextResponse.json(tasks);
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Failed to fetch tasks' },
+      { status: 500 }
+    );
+  }
 }
