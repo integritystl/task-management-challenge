@@ -49,7 +49,7 @@ export function CreateTaskButton() {
 
   const onSubmit = async (data: TaskFormData) => {
     try {
-      const response = await fetch('/api/tasks', {
+      const response = await fetch('http://localhost:5072/task', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

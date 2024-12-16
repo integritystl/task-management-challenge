@@ -2,7 +2,7 @@ import { TaskList } from '@/components/task-list';
 import { CreateTaskButton } from '@/components/create-task-button';
 
 async function getTasks() {
-  const res = await fetch('http://localhost:3000/api/tasks', {
+  const res = await fetch('http://localhost:5072/task', {
     cache: 'no-store'
   });
 
