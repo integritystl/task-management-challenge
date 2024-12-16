@@ -7,7 +7,8 @@ export function DeleteTaskButton({ taskId, onTaskDeletedAction }: { taskId: stri
     const [isDeleting, setIsDeleting] = useState(false);
 
 const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this task?')) return;
+    if (!confirm('Are you sure you want to delete this task?'))
+        return;
 
     setIsDeleting(true);
 
