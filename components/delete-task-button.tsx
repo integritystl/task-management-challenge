@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Trash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-export function DeleteTaskButton({ taskId, onTaskDeleted }: { taskId: string; onTaskDeleted: () => void }) {
+export function DeleteTaskButton({ taskId, onTaskDeletedAction }: { taskId: string; onTaskDeletedAction: () => void }) {
     const [isDeleting, setIsDeleting] = useState(false);
 
 const handleDelete = async () => {
@@ -23,7 +23,7 @@ const handleDelete = async () => {
 
         const result = await response.json();
         console.log(result.message);
-        onTaskDeleted();
+        onTaskDeletedAction();
     } catch (error) {
         alert('An error occurred while deleting the task.');
     } finally {
