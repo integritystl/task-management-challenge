@@ -12,6 +12,7 @@ function formatDueDate(dateString: string | null) {
 
     try {
         const date = new Date(dateString);
+
         return new Intl.DateTimeFormat('en-US', {
             year: 'numeric',
             month: 'short',
@@ -34,9 +35,12 @@ function getStatusBadge(status: string) {
 }
 
 function getPriorityBadge(priority: string) {
-    if (priority === 'LOW') return { label: 'Low', className: 'badge bg-blue-100 text-black' };
-    if (priority === 'MEDIUM') return { label: 'Medium', className: 'badge bg-yellow-100 text-black' };
-    if (priority === 'HIGH') return { label: 'High', className: 'badge bg-red-100 text-black' };
+    if (priority === 'LOW')
+        return { label: 'Low', className: 'badge bg-blue-100 text-black' };
+    if (priority === 'MEDIUM')
+        return { label: 'Medium', className: 'badge bg-yellow-100 text-black' };
+    if (priority === 'HIGH')
+        return { label: 'High', className: 'badge bg-red-100 text-black' };
     return { label: priority, className: 'badge bg-light text-dark' };
 }
 
@@ -55,9 +59,9 @@ export default function Home() {
         async function fetchTasks() {
             try {
                 const response = await api.get('');
-                if (response.status === 200 && response.data) {
-                    setTasks(response.data.data);
-                }
+
+                if (response.status === 200 && response.data)
+                    setTasks(response.data.data);              
             } catch (error) {
                 alert('An error occurred while fetching tasks. Please try again later.');
             } finally {
@@ -71,17 +75,18 @@ export default function Home() {
     const handleDelete = async (taskId: string) => {
         try {
             const response = await api.delete(`/${taskId}`);
-            if (response.status === 200) {
+
+            if (response.status === 200) 
                 setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
-            } else {
-                alert('Failed to delete the task.');
-            }
+             else 
+                alert('Failed to delete the task.');          
         } catch (error) {
             alert('An error occurred while deleting the task.');
         }
     };
 
-    if (loading) return <p>Loading tasks...</p>;
+    if (loading)
+        return <p>Loading tasks...</p>;
 
     return (
         <main className="container mx-auto p-4">
