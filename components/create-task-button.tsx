@@ -12,9 +12,6 @@ import {
 import { PlusCircle } from 'lucide-react';
 import { TaskForm } from '@/components/task-form';
 
-const PRIORITIES = ['LOW', 'MEDIUM', 'HIGH'] as const;
-const STATUSES = ['TODO', 'IN_PROGRESS', 'DONE'] as const;
-
 type TaskFormData = {
     title: string;
     description?: string;
