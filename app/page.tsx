@@ -7,20 +7,18 @@ import axios from 'axios';
 import https from 'https';
 
 function formatDueDate(dateString: string | null) {
-    if (!dateString) 
-    return 'No due date';
+    if (!dateString)
+        return 'No due date';
 
-    try {
-        const date = new Date(dateString);
-
-        return new Intl.DateTimeFormat('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: '2-digit',
-        }).format(date);
-    } catch {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime()))
         return 'Invalid date';
-    }
+
+    return new Intl.DateTimeFormat('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: '2-digit',
+    }).format(date);
 }
 
 function getStatusBadge(status: string) {
@@ -51,42 +49,39 @@ const api = axios.create({
     }),
 });
 
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        alert(
+            error.response?.data?.message || 'An unexpected error occurred. Please try again later.'
+        );
+        return Promise.reject(error);
+    }
+);
+
 export default function Home() {
     const [tasks, setTasks] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        async function fetchTasks() {
-            try {
-                const response = await api.get('');
-
-                if (response.status === 200 && response.data)
-                    setTasks(response.data.data);              
-            } catch (error) {
-                alert('An error occurred while fetching tasks. Please try again later.');
-            } finally {
-                setLoading(false);
-            }
-        }
-
-        fetchTasks();
+        api.get('')
+            .then((response) => {
+                if (response.status === 200 && response.data) {
+                    setTasks(response.data.data);
+                }
+            })
+            .finally(() => setLoading(false));
     }, []);
 
-    const handleDelete = async (taskId: string) => {
-        try {
-            const response = await api.delete(`/${taskId}`);
-
-            if (response.status === 200) 
+    const handleDelete = (taskId: string) => {
+        api.delete(`/${taskId}`).then((response) => {
+            if (response.status === 200) {
                 setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
-             else 
-                alert('Failed to delete the task.');          
-        } catch (error) {
-            alert('An error occurred while deleting the task.');
-        }
+            }
+        });
     };
 
-    if (loading)
-        return <p>Loading tasks...</p>;
+    if (loading) return <p>Loading tasks...</p>;
 
     return (
         <main className="container mx-auto p-4">
