@@ -10,7 +10,7 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { PlusCircle } from 'lucide-react';
-import { TaskForm } from '@/components/task-form'; // Import TaskForm
+import { TaskForm } from '@/components/task-form';
 
 const PRIORITIES = ['LOW', 'MEDIUM', 'HIGH'] as const;
 const STATUSES = ['TODO', 'IN_PROGRESS', 'DONE'] as const;
