@@ -3,6 +3,8 @@ import { useState } from 'react';
 import { Trash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:7025/api/task';
+
 export function DeleteTaskButton({ taskId, onTaskDeletedAction }: { taskId: string; onTaskDeletedAction: () => void }) {
     const [isDeleting, setIsDeleting] = useState(false);
 
@@ -12,14 +14,14 @@ export function DeleteTaskButton({ taskId, onTaskDeletedAction }: { taskId: stri
 
         setIsDeleting(true);
 
-        const response = await fetch(`https://localhost:7025/api/task/${taskId}`, {
+        const response = await fetch(`${API_BASE_URL}/${taskId}`, {
             method: 'DELETE',
         });
 
         if (response.ok)
             onTaskDeletedAction();
         else
-            alert('Failed to delete the task.');
+            alert('Failed to delete the task.');  
 
         setIsDeleting(false);
     };

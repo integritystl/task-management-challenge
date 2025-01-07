@@ -27,12 +27,14 @@ const taskSchema = z.object({
 
 type TaskFormData = z.infer<typeof taskSchema>;
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:7025/api/task';
+
 export function EditTaskButton({ task }: { task: TaskFormData & { id: string } }) {
     const [open, setOpen] = useState(false);
 
-    const onSubmit = async (data: TaskFormData) => {
+    const handleSubmit = async (data: TaskFormData) => {
         const updatedTask = { ...data, dueDate: data.dueDate || null };
-        const response = await fetch(`https://localhost:7025/api/task/${task.id}`, {
+        const response = await fetch(`${API_BASE_URL}/${task.id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(updatedTask),
@@ -41,8 +43,9 @@ export function EditTaskButton({ task }: { task: TaskFormData & { id: string } }
         if (response.ok) {
             setOpen(false);
             window.location.reload();
-        } else
-            console.error('Failed to update task');    
+        } else {
+            console.error('Failed to update task');
+        }
     };
 
     return (
@@ -65,7 +68,7 @@ export function EditTaskButton({ task }: { task: TaskFormData & { id: string } }
                         ...task,
                         dueDate: task.dueDate || '',
                     }}
-                    onSubmit={onSubmit}
+                    onSubmit={handleSubmit}
                     submitButtonLabel="Save Changes"
                 />
             </DialogContent>
