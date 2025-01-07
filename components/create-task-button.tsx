@@ -20,12 +20,14 @@ type TaskFormData = {
     dueDate?: string;
 };
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:7025/api/task';
+
 export function CreateTaskButton() {
     const [open, setOpen] = useState(false);
 
     const onSubmit = async (data: TaskFormData) => {
         const taskData = { ...data, dueDate: data.dueDate || null };
-        const response = await fetch('https://localhost:7025/api/task', {
+        const response = await fetch(`${API_BASE_URL}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(taskData),
@@ -34,9 +36,9 @@ export function CreateTaskButton() {
         if (response.ok) {
             setOpen(false);
             window.location.reload();
-        }
-        else
+        } else {
             console.error('Failed to create task');
+        }
     };
 
     return (
@@ -57,7 +59,8 @@ export function CreateTaskButton() {
                 <TaskForm
                     defaultValues={{ priority: 'MEDIUM', status: 'TODO' }}
                     onSubmit={onSubmit}
-                    submitButtonLabel="Create Task" />
+                    submitButtonLabel="Create Task"
+                />
             </DialogContent>
         </Dialog>
     );
