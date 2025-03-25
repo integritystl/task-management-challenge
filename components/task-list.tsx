@@ -21,15 +21,18 @@ interface TaskWithLabels extends Task {
   labels?: Label[];
 }
 
-function sortArrayOfTasks(arrayOfTasks: (Task[] | TaskWithLabels[])) {
+function sortArrayOfTasks(arrayOfTasks: (Task[] | TaskWithLabels[]), sortOrder: 'asc' | 'desc') {
   arrayOfTasks.sort((a, b) => {
     const aDateStr = a.dueDate instanceof Date ? a.dueDate.toISOString() : a.dueDate;
     const bDateStr = b.dueDate instanceof Date ? b.dueDate.toISOString() : b.dueDate;
     if (!aDateStr) return 1;
     if (!bDateStr) return -1;
-    return bDateStr.localeCompare(aDateStr);
+    return sortOrder === 'desc'
+      ? bDateStr.localeCompare(aDateStr)
+      : aDateStr.localeCompare(bDateStr);
   });
 }
+
 
 const starterLabels: Label[] = [
   { id: '1', title: 'Work' },
@@ -39,17 +42,18 @@ const starterLabels: Label[] = [
 
 
 export function TaskList({ initialTasks }: TaskListProps) {
-  sortArrayOfTasks(initialTasks)
+  sortArrayOfTasks(initialTasks, "desc")
   const [tasks, setTasks] = useState<TaskWithLabels[]>(initialTasks);
   const [labels, setLabels] = useState<Label[]>(starterLabels);
   const [selectedLabelId, setSelectedLabelId] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc'); // default: newest to oldest
 
   useEffect(() => {
     const sortedTasks = tasks.slice();
     sortedTasks.map((task) => ({ ...task, labelIds: [] }));
-    sortArrayOfTasks(sortedTasks)
+    sortArrayOfTasks(sortedTasks, sortOrder)
     setTasks(sortedTasks);
-  }, [initialTasks]);
+  }, [initialTasks, sortOrder]);
 
   const filteredTasks = selectedLabelId
     ? tasks.filter((task) => task.labelIds?.includes(selectedLabelId))
@@ -85,8 +89,8 @@ export function TaskList({ initialTasks }: TaskListProps) {
               setSelectedLabelId(selectedLabelId === label.id ? null : label.id)
             }
             className={`py-1 px-4 flex items-center gap-2 rounded-md text-white ${selectedLabelId === label.id
-                ? 'bg-blue-900'
-                : 'bg-blue-600 hover:bg-blue-900'
+              ? 'bg-blue-900'
+              : 'bg-blue-600 hover:bg-blue-900'
               }`}
           >
             {selectedLabelId === label.id && <Check size={20} />}
@@ -100,7 +104,17 @@ export function TaskList({ initialTasks }: TaskListProps) {
           setSelectedLabelId={setSelectedLabelId}
         />
       </section>
-
+      <section>
+        <div className="flex justify-start pb-3">
+          <button
+            onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
+            className="px-4 py-2 bg-gray-300 text-gray-900 rounded-md hover:bg-gray-400"
+          >
+            Sort Due Date: {sortOrder === 'desc' ? 'Latest → Earliest' : 'Earliest → Latest'}
+          </button>
+        </div>
+      </section>
+      <hr className='pb-4 border-t-2'></hr>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredTasks.map((task) => {
           const taskLabels = labels.filter((label) => task.labelIds?.includes(label.id));
@@ -119,7 +133,7 @@ export function TaskList({ initialTasks }: TaskListProps) {
             </TaskCard>
           );
         })}
-        {filteredTasks.length === 0 && 
+        {filteredTasks.length === 0 &&
           <p className='text-lg pt-5'>There are no tasks for this selected filter.</p>
         }
       </div>
