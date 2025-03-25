@@ -8,9 +8,7 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Pencil, Plus, X } from 'lucide-react';
+import { Pencil } from 'lucide-react';
 
 interface Label {
 	id: string;
@@ -28,14 +26,13 @@ interface EditLabelsModalProps {
 	taskLabels?: string[];
 }
 
+
 export function SelectTaskLabelsModal({
 	labels,
 	onLabelAssign,
 	onLabelUnassign,
-	taskId,
 	taskLabels,
 }: EditLabelsModalProps) {
-	const [newLabel, setNewLabel] = useState('');
 	const [open, setOpen] = useState(false);
 
 	const handleToggleLabel = (labelId: string) => {

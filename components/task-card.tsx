@@ -32,8 +32,9 @@ interface TaskWithLabels extends Task {
 
 interface TaskCardProps {
   task: TaskWithLabels;
-  children?: React.ReactNode; // modal for label editing
+  children?: React.ReactNode;
 }
+
 
 export function TaskCard({ task, children }: TaskCardProps) {
   return (

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { TaskCard } from './task-card';
 import { Task } from '@/lib/db';
-import { Check } from 'lucide-react';
+import { Check, CalendarArrowUp, CalendarArrowDown } from 'lucide-react';
 import { ManageLabelsModal } from './manage-labels-modal';
 import { SelectTaskLabelsModal } from './select-task-labels-modal'
 
@@ -21,6 +21,12 @@ interface TaskWithLabels extends Task {
   labels?: Label[];
 }
 
+const starterLabels: Label[] = [
+  { id: '1', title: 'Work' },
+  { id: '2', title: 'Home' },
+  { id: '3', title: 'Fitness' },
+]
+
 function sortArrayOfTasks(arrayOfTasks: (Task[] | TaskWithLabels[]), sortOrder: 'asc' | 'desc') {
   arrayOfTasks.sort((a, b) => {
     const aDateStr = a.dueDate instanceof Date ? a.dueDate.toISOString() : a.dueDate;
@@ -34,19 +40,12 @@ function sortArrayOfTasks(arrayOfTasks: (Task[] | TaskWithLabels[]), sortOrder: 
 }
 
 
-const starterLabels: Label[] = [
-  { id: '1', title: 'Work' },
-  { id: '2', title: 'Home' },
-  { id: '3', title: 'Fitness' },
-];
-
-
 export function TaskList({ initialTasks }: TaskListProps) {
   sortArrayOfTasks(initialTasks, "desc")
   const [tasks, setTasks] = useState<TaskWithLabels[]>(initialTasks);
   const [labels, setLabels] = useState<Label[]>(starterLabels);
   const [selectedLabelId, setSelectedLabelId] = useState<string | null>(null);
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc'); // default: newest to oldest
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   useEffect(() => {
     const sortedTasks = tasks.slice();
@@ -108,9 +107,9 @@ export function TaskList({ initialTasks }: TaskListProps) {
         <div className="flex justify-start pb-3">
           <button
             onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
-            className="px-4 py-2 bg-gray-300 text-gray-900 rounded-md hover:bg-gray-400"
+            className="px-4 py-2 bg-gray-300 text-gray-900 rounded-md hover:bg-gray-400 flex items-center gap-2"
           >
-            Sort Due Date: {sortOrder === 'desc' ? 'Latest → Earliest' : 'Earliest → Latest'}
+            Sort Due Date: {sortOrder === 'desc' ? <CalendarArrowUp size={22} /> : <CalendarArrowDown size={22} />}
           </button>
         </div>
       </section>
