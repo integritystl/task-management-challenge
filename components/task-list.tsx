@@ -21,13 +21,25 @@ interface TaskWithLabels extends Task {
   labels?: Label[];
 }
 
-export function TaskList({ initialTasks }: TaskListProps) {
-  const starterLabels: Label[] = [
-    { id: '1', title: 'Work' },
-    { id: '2', title: 'Home' },
-    { id: '3', title: 'Fitness' },
-  ];
+function sortArrayOfTasks(arrayOfTasks: (Task[] | TaskWithLabels[])) {
+  arrayOfTasks.sort((a, b) => {
+    const aDateStr = a.dueDate instanceof Date ? a.dueDate.toISOString() : a.dueDate;
+    const bDateStr = b.dueDate instanceof Date ? b.dueDate.toISOString() : b.dueDate;
+    if (!aDateStr) return 1;
+    if (!bDateStr) return -1;
+    return bDateStr.localeCompare(aDateStr);
+  });
+}
 
+const starterLabels: Label[] = [
+  { id: '1', title: 'Work' },
+  { id: '2', title: 'Home' },
+  { id: '3', title: 'Fitness' },
+];
+
+
+export function TaskList({ initialTasks }: TaskListProps) {
+  sortArrayOfTasks(initialTasks)
   const [tasks, setTasks] = useState<TaskWithLabels[]>(initialTasks);
   const [labels, setLabels] = useState<Label[]>(starterLabels);
   const [selectedLabelId, setSelectedLabelId] = useState<string | null>(null);
@@ -35,14 +47,7 @@ export function TaskList({ initialTasks }: TaskListProps) {
   useEffect(() => {
     const sortedTasks = tasks.slice();
     sortedTasks.map((task) => ({ ...task, labelIds: [] }));
-    sortedTasks.sort((a, b) => {
-      const aDateStr = a.dueDate instanceof Date ? a.dueDate.toISOString() : a.dueDate;
-      const bDateStr = b.dueDate instanceof Date ? b.dueDate.toISOString() : b.dueDate;
-      if (!aDateStr) return 1;
-      if (!bDateStr) return -1;
-      return bDateStr.localeCompare(aDateStr);
-    });
-
+    sortArrayOfTasks(sortedTasks)
     setTasks(sortedTasks);
   }, [initialTasks]);
 
