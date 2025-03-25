@@ -53,7 +53,7 @@ export function ManageLabelsModal({
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>
-				<button className="py-2 px-4 flex items-center gap-2 rounded-md bg-slate-700 text-white">
+				<button className="py-2 px-4 flex items-center gap-2 rounded-md bg-gray-700 hover:bg-black text-white">
 					<Pencil size={20} />
 				</button>
 			</DialogTrigger>

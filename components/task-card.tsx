@@ -39,7 +39,7 @@ export function TaskCard({ task, children }: TaskCardProps) {
   return (
     <Card>
       <CardHeader>
-        <div className="flex justify-between items-start">
+        <div className="flex justify-between items-start gap-3">
           <CardTitle className="text-xl">{task.title}</CardTitle>
           <Badge
             variant="outline"

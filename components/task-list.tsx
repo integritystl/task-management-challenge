@@ -119,6 +119,9 @@ export function TaskList({ initialTasks }: TaskListProps) {
             </TaskCard>
           );
         })}
+        {filteredTasks.length === 0 && 
+          <p className='text-lg pt-5'>There are no tasks for this selected filter.</p>
+        }
       </div>
     </>
   );

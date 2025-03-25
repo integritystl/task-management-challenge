@@ -49,8 +49,8 @@ export function SelectTaskLabelsModal({
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>
-				<button className="p-[2px] flex items-center rounded border-2 border-slate-600 text-slate-600" title='Click to select Labels'>
-					<Pencil size={16} />
+				<button className="flex items-center rounded-md border-2 border-transparent hover:border-slate-600 text-slate-600" title='Click to select Labels'>
+					<Pencil size={20} />
 				</button>
 			</DialogTrigger>
 			<DialogContent>
@@ -62,7 +62,7 @@ export function SelectTaskLabelsModal({
 						{labels.map((label) => (
 							<div
 								key={label.id}
-								className="flex justify-between items-center border p-2 rounded"
+								className="flex justify-between items-center border p-2 rounded hover:border-2 hover:border-slate-700"
 							>
 								<div className="flex items-center gap-2">
 									<input

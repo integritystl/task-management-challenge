@@ -18,7 +18,7 @@ export default async function Home() {
 
   return (
     <main className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
         <h1 className="text-4xl font-bold">Task Management</h1>
         <CreateTaskButton />
       </div>
