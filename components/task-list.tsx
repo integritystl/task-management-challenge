@@ -59,24 +59,28 @@ export function TaskList({ initialTasks }: TaskListProps) {
     : tasks;
 
   const handleAssignLabel = (taskId: string, labelId: string) => {
-    setTasks((prev) =>
-      prev.map((task) =>
-        task.id === taskId && !task.labelIds?.includes(labelId)
-          ? { ...task, labelIds: [...(task.labelIds || []), labelId] }
-          : task
-      )
-    );
+    const updatedTasks = tasks.map((task) => {
+      if (task.id === taskId && !task.labelIds?.includes(labelId)) {
+        const updatedLabelIds = [...(task.labelIds || []), labelId];
+        return { ...task, labelIds: updatedLabelIds };
+      }
+      return task;
+    });
+
+    setTasks(updatedTasks);
   };
 
   const handleUnassignLabel = (taskId: string, labelId: string) => {
-    setTasks((prev) =>
-      prev.map((task) =>
-        task.id === taskId
-          ? { ...task, labelIds: task.labelIds?.filter((id) => id !== labelId) }
-          : task
-      )
-    );
+    const updatedTasks = tasks.map((task) => {
+      if (task.id === taskId) {
+        const filteredLabelIds = task.labelIds?.filter((id) => id !== labelId) || [];
+        return { ...task, labelIds: filteredLabelIds };
+      }
+      return task;
+    });
+    setTasks(updatedTasks);
   };
+
 
   return (
     <>
@@ -113,7 +117,7 @@ export function TaskList({ initialTasks }: TaskListProps) {
           </button>
         </div>
       </section>
-      <hr className='pb-4 border-t-2'></hr>
+      <hr className='pb-4 border-t-2 border-slate-300'></hr>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredTasks.map((task) => {
           const taskLabels = labels.filter((label) => task.labelIds?.includes(label.id));
