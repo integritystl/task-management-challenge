@@ -37,7 +37,7 @@ interface TaskCardProps {
 
 export function TaskCard({ task, children }: TaskCardProps) {
   return (
-    <Card>
+    <Card className='shadow-md'>
       <CardHeader>
         <div className="flex justify-between items-start gap-3">
           <CardTitle className="text-xl">{task.title}</CardTitle>

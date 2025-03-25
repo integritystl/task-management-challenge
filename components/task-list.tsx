@@ -84,7 +84,7 @@ export function TaskList({ initialTasks }: TaskListProps) {
             onClick={() =>
               setSelectedLabelId(selectedLabelId === label.id ? null : label.id)
             }
-            className={`py-2 px-4 flex items-center gap-2 rounded-md text-white ${selectedLabelId === label.id
+            className={`py-1 px-4 flex items-center gap-2 rounded-md text-white ${selectedLabelId === label.id
                 ? 'bg-blue-900'
                 : 'bg-blue-600 hover:bg-blue-900'
               }`}
