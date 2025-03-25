@@ -17,7 +17,7 @@ export default async function Home() {
   const tasks = await getTasks();
 
   return (
-    <main className="container mx-auto p-4">
+    <main className="container mx-auto p-4 mb-10 mt-5">
       <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
         <h1 className="text-4xl font-bold">Task Management</h1>
         <CreateTaskButton />
