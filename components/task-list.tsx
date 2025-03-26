@@ -18,13 +18,13 @@ const starterLabels: Label[] = [
   { id: '3', title: 'Fitness' },
 ]
 
-function sortArrayOfTasks(arrayOfTasks: (Task[] | TaskWithLabels[]), sortOrder: 'asc' | 'desc') {
+function sortArrayOfTasks(arrayOfTasks: (Task[] | TaskWithLabels[]), sortOrder: 'ascending' | 'descending') {
   arrayOfTasks.sort((a, b) => {
     const aDateStr = a.dueDate instanceof Date ? a.dueDate.toISOString() : a.dueDate;
     const bDateStr = b.dueDate instanceof Date ? b.dueDate.toISOString() : b.dueDate;
     if (!aDateStr) return 1;
     if (!bDateStr) return -1;
-    return sortOrder === 'desc'
+    return sortOrder === 'descending'
       ? bDateStr.localeCompare(aDateStr)
       : aDateStr.localeCompare(bDateStr);
   });
@@ -32,11 +32,11 @@ function sortArrayOfTasks(arrayOfTasks: (Task[] | TaskWithLabels[]), sortOrder: 
 
 
 export function TaskList({ initialTasks }: TaskListProps) {
-  sortArrayOfTasks(initialTasks, "desc")
+  sortArrayOfTasks(initialTasks, "descending")
   const [tasks, setTasks] = useState<TaskWithLabels[]>(initialTasks);
   const [labels, setLabels] = useState<Label[]>(starterLabels);
   const [selectedLabelId, setSelectedLabelId] = useState<string | null>(null);
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [sortOrder, setSortOrder] = useState<'ascending' | 'descending'>('descending');
 
   useEffect(() => {
     const sortedTasks = tasks.slice();
@@ -101,10 +101,10 @@ export function TaskList({ initialTasks }: TaskListProps) {
       <section>
         <div className="flex justify-start pb-3">
           <button
-            onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
+            onClick={() => setSortOrder(sortOrder === 'descending' ? 'ascending' : 'descending')}
             className="px-4 py-2 bg-gray-300 text-gray-900 rounded-md hover:bg-gray-400 flex items-center gap-2"
           >
-            Sort Due Date: {sortOrder === 'desc' ? <CalendarArrowUp size={22} /> : <CalendarArrowDown size={22} />}
+            Sort Due Date: {sortOrder === 'descending' ? <CalendarArrowUp size={22} /> : <CalendarArrowDown size={22} />}
           </button>
         </div>
       </section>
