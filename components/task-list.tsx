@@ -1,25 +1,16 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { TaskCard } from './task-card';
-import { Task } from '@/lib/db';
-import { Check, CalendarArrowUp, CalendarArrowDown } from 'lucide-react';
+
+// Components
 import { ManageLabelsModal } from './manage-labels-modal';
 import { SelectTaskLabelsModal } from './select-task-labels-modal'
+import { TaskCard } from './task-card';
+import { Check, CalendarArrowUp, CalendarArrowDown } from 'lucide-react';
 
-interface TaskListProps {
-  initialTasks: Task[];
-}
-
-interface Label {
-  id: string;
-  title: string;
-}
-
-interface TaskWithLabels extends Task {
-  labelIds?: string[];
-  labels?: Label[];
-}
+// Types
+import { Task } from '@/lib/db';
+import { TaskListProps, Label, TaskWithLabels } from '@/types/task-list';
 
 const starterLabels: Label[] = [
   { id: '1', title: 'Work' },

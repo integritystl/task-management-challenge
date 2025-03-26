@@ -7,7 +7,9 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Task } from '@/lib/db';
+
+// Types
+import { TaskCardProps } from '@/types/task-list';
 
 const priorityColors = {
   LOW: 'bg-blue-100 text-blue-800',
@@ -20,20 +22,6 @@ const statusColors = {
   IN_PROGRESS: 'bg-purple-100 text-purple-800',
   DONE: 'bg-green-100 text-green-800',
 } as const;
-
-interface Label {
-  id: string;
-  title: string;
-}
-
-interface TaskWithLabels extends Task {
-  labels?: Label[];
-}
-
-interface TaskCardProps {
-  task: TaskWithLabels;
-  children?: React.ReactNode;
-}
 
 
 export function TaskCard({ task, children }: TaskCardProps) {

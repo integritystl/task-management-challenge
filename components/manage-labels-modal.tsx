@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+
+// Components
 import {
 	Dialog,
 	DialogContent,
@@ -12,21 +14,9 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Pencil, Plus, X } from 'lucide-react';
 
-interface Label {
-	id: string;
-	title: string;
-}
+// Types
+import { Label, EditLabelsModalProps } from '@/types/task-list'
 
-interface EditLabelsModalProps {
-	labels: Label[];
-	setLabels: React.Dispatch<React.SetStateAction<Label[]>>;
-	selectedLabelId: string | null;
-	setSelectedLabelId: (id: string | null) => void;
-	onLabelAssign?: (labelId: string) => void;
-	onLabelUnassign?: (labelId: string) => void;
-	taskId?: string;
-	taskLabels?: string[];
-}
 
 export function ManageLabelsModal({
 	labels,
