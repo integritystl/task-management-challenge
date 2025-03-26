@@ -61,14 +61,15 @@ export function SelectTaskLabelsModal({
 								key={label.id}
 								className="flex justify-between items-center border p-2 rounded hover:border-2 hover:border-slate-700"
 							>
-								<div className="flex items-center gap-2">
+								<label className="flex items-center gap-2 h-full w-full">
 									<input
 										type="checkbox"
 										checked={taskLabels?.includes(label.id)}
 										onChange={() => handleToggleLabel(label.id)}
+										className='h-4 w-4'
 									/>
 									<span>{label.title}</span>
-								</div>
+								</label>
 							</div>
 						))}
 					</div>

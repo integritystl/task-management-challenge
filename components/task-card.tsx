@@ -70,7 +70,7 @@ export function TaskCard({ task, children }: TaskCardProps) {
         </div>
         <div className="flex flex-wrap gap-2">
           <span>Type:</span>
-          <Badge className={statusColors[task.status as keyof typeof statusColors]}>
+          <Badge className={`${statusColors[task.status as keyof typeof statusColors]} hover:text-white`}>
             {task.status}
           </Badge>
         </div>

@@ -86,7 +86,7 @@ export function ManageLabelsModal({
 									onClick={() => handleDeleteLabel(label.id)}
 									className="text-red-500 hover:text-red-700"
 								>
-									<X size={18} />
+									<X size={24} />
 								</button>
 							</div>
 						))}
