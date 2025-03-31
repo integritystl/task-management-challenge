@@ -1,11 +1,10 @@
 'use client';
 
 import { useState, useEffect, JSX } from 'react';
-import { CreateTaskButton } from '@/components/create-task-button';
+import { UpdateTaskButton } from '@/components/update-task-button';
 import { ManageLabelsButton } from '@/components/manage-labels-button';
 import { TaskFilter } from '@/components/task-filter';
 import { ErrorBoundary } from '@/components/error-boundary';
-import { LoadingSpinner } from '@/components/loading-spinner';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { useTasksApi, TaskFilterOptions } from '@/hooks/use-tasks-api';
@@ -76,7 +75,7 @@ export default function Home(): JSX.Element {
                   resetTrigger={resetTrigger}
                 />
                 <ManageLabelsButton />
-                <CreateTaskButton onTaskCreated={handleTaskCreated} />
+                <UpdateTaskButton onTaskCreated={handleTaskCreated} />
               </div>
             </div>
           </div>
@@ -97,7 +96,7 @@ export default function Home(): JSX.Element {
               </div>
             </div>
           ) : isLoading || isRefetching ? (
-            <LoadingSpinner />
+              <TaskListSkeleton />
             ) : (
                 <>
                   {hasActiveFilters && (
@@ -172,5 +171,39 @@ export default function Home(): JSX.Element {
         </footer>
       </div>
     </ErrorBoundary>
+  );
+}
+/**
+ * Skeleton loader for the task list
+ * @returns JSX element with skeleton UI for loading state
+ */
+function TaskListSkeleton(): JSX.Element {
+  const skeletonCards = Array.from({ length: 6 }, (_, index) => (
+    <div
+      key={index}
+      className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 animate-pulse"
+    >
+      <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-4"></div>
+      <div className="space-y-2 mb-4">
+        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
+        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6"></div>
+        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-4/6"></div>
+      </div>
+      <div className="flex justify-between mb-4">
+        <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
+        <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
+      </div>
+      <div className="flex flex-wrap gap-2 mb-4">
+        <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded-full w-16"></div>
+        <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded-full w-20"></div>
+      </div>
+      <div className="flex justify-end mt-4">
+        <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
+      </div>
+    </div>
+  ));
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">{skeletonCards}</div>
   );
 }

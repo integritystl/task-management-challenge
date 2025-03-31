@@ -46,15 +46,11 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table';
-
-import {
-  IconName,
-  ICON_VALUES,
-  PREDEFINED_COLORS,
-  LabelSchema,
-  LabelData,
-} from '../lib/label-types';
 import { useLabelsApi } from '../hooks/use-labels-api';
+import { ICON_VALUES, LabelData, LabelSchema, PREDEFINED_COLORS } from '@/lib/label-types';
+import { IconName, Label } from '@/lib/db';
+
+
 
 /**
  * Props for the LabelFormDialog component
@@ -285,7 +281,7 @@ export function ManageLabelsButton(): JSX.Element {
     setFormMode('create');
     setLabelFormOpen(true);
   }, []);
-  const handleEditLabel = useCallback((label: LabelData) => {
+  const handleEditLabel = useCallback((label: Label) => {
     setCurrentLabel(label);
     setFormMode('edit');
     setLabelFormOpen(true);
@@ -367,6 +363,7 @@ export function ManageLabelsButton(): JSX.Element {
                     ></div>
                     <div className="font-medium">{label.name}</div>
                   </div>
+
                   <div className="flex space-x-2">
                     <Button
                       variant="outline"
@@ -479,12 +476,14 @@ export function ManageLabelsButton(): JSX.Element {
       </>
     );
   }, [labels, isLoading, isSubmitting, handleEditLabel, handleDeleteLabel]);
+
   return (
     <>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
           <Button variant="outline" aria-label="Manage Labels">
             <Tags className="h-4 w-4" />
+            <span className="hidden lg:inline ml-2">Manage Labels</span>
           </Button>
         </DialogTrigger>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">

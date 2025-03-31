@@ -2,7 +2,7 @@ import { useState, useEffect, JSX } from 'react';
 import { Check, Filter, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TaskPriority, TaskStatus } from '@/app/api/tasks/route';
-import { LabelData } from '@/lib/label-types';
+import { Label } from '@/lib/db';
 import { useLabelsApi } from '@/hooks/use-labels-api';
 import { TaskFilterOptions } from '@/hooks/use-tasks-api';
 import {
@@ -46,7 +46,7 @@ export function TaskFilter({ onFilterChange, activeFilters, resetTrigger = 0 }: 
   const [selectedStatus, setSelectedStatus] = useState<TaskStatus | null>(
     activeFilters.status || null
   );
-  const [selectedLabels, setSelectedLabels] = useState<LabelData[]>([]);
+  const [selectedLabels, setSelectedLabels] = useState<Label[]>([]);
   const [sortBy, setSortBy] = useState<string>(activeFilters.sortBy || 'dueDate');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(activeFilters.sortOrder || 'asc');
   useEffect(() => {
@@ -91,7 +91,7 @@ export function TaskFilter({ onFilterChange, activeFilters, resetTrigger = 0 }: 
     onFilterChange({});
     setIsOpen(false);
   };
-  const toggleLabel = (label: LabelData): void => {
+  const toggleLabel = (label: Label): void => {
     setSelectedLabels(prev => {
       const isSelected = prev.some(l => l.id === label.id);
       if (isSelected) {

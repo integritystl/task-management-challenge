@@ -21,6 +21,18 @@ enum TaskStatus {
   DONE
 }
 
+/// Enum for icon names
+enum IconName {
+  tag
+  check
+  star
+  flag
+  bookmark
+  heart
+  bell
+  alertCircle
+}
+
 /// Task model representing a single task in the system
 model Task {
   id          String       @id @default(cuid())
@@ -42,7 +54,7 @@ model Label {
   id        String   @id @default(cuid())
   name      String   @unique
   color     String
-  icon      String
+  icon      IconName @default(tag)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   tasks     Task[]   @relation("TaskToLabel")
