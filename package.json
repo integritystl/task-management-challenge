@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "db:config": "prisma generate && prisma db push",
+    "postinstall": "npm run db:config"
   },
   "engines": {
     "node": ">=18",
