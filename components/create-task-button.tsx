@@ -15,7 +15,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Label as LabelComponent } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -26,7 +26,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { X, PlusCircle, Tag, Check, Star, Flag, Bookmark, Heart, Bell, AlertCircle, Loader2 } from 'lucide-react';
-import { Task, TaskPriority, TaskStatus } from '@/lib/db';
+import { Task, Label, TaskPriority, TaskStatus } from '@/lib/db';
 
 // Define icon type for better type safety
 type IconName = 'tag' | 'check' | 'star' | 'flag' | 'bookmark' | 'heart' | 'bell' | 'alertCircle';
@@ -122,7 +122,6 @@ const renderIcon = (iconName: IconName, className?: string): JSX.Element => {
  */
 const LabelsList = ({ labels, onRemove }: LabelsListProps): JSX.Element | null => {
   if (labels.length === 0) return null;
-
   return (
     <div className="flex flex-wrap gap-2 mt-2" role="list" aria-label="Task labels">
       {labels.map((label, index) => (
@@ -167,14 +166,12 @@ const LabelDialog = ({
   });
 
   const currentLabel = watch();
-
   const handleOpenChange = useCallback((open: boolean) => {
     if (!open) {
       onCancel();
     }
     onOpenChange(open);
   }, [onCancel, onOpenChange]);
-
   const handleAddLabel = useCallback((data: LabelData) => {
     onAddLabel(data);
     reset();
@@ -182,7 +179,7 @@ const LabelDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New Label</DialogTitle>
           <DialogDescription>
@@ -191,7 +188,7 @@ const LabelDialog = ({
         </DialogHeader>
         <form onSubmit={handleSubmit(handleAddLabel)} className="space-y-3">
           <div>
-            <Label htmlFor="labelName">Label Name</Label>
+            <LabelComponent htmlFor="labelName">Label Name</LabelComponent>
             <Input
               id="labelName"
               {...register('name')}
@@ -205,7 +202,7 @@ const LabelDialog = ({
             )}
           </div>
           <div>
-            <Label htmlFor="labelIcon">Icon</Label>
+            <LabelComponent htmlFor="labelIcon">Icon</LabelComponent>
             <Controller
               name="icon"
               control={control}
@@ -238,7 +235,7 @@ const LabelDialog = ({
             )}
           </div>
           <div>
-            <Label htmlFor="labelColor">Color</Label>
+            <LabelComponent htmlFor="LabelColor">Color</LabelComponent>
             <div className="grid grid-cols-3 gap-2 mt-1">
               {PREDEFINED_COLORS.map((color) => (
                 <button
@@ -265,7 +262,7 @@ const LabelDialog = ({
             </div>
           </div>
           <div className="mt-3">
-            <Label>Preview</Label>
+            <LabelComponent htmlFor="LabelColor">Label</LabelComponent>
             <div className="flex items-center mt-1 p-2 border rounded-md">
               <div
                 className="flex items-center rounded-md px-2 py-1 text-white"
@@ -308,8 +305,9 @@ export function CreateTaskButton({ onTaskCreated }: CreateTaskButtonProps): JSX.
   const [open, setOpen] = useState<boolean>(false);
   const [labelDialogOpen, setLabelDialogOpen] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [existingLabels, setExistingLabels] = useState<Label[]>([]);
+  const [isLoadingLabels, setIsLoadingLabels] = useState<boolean>(false);
   const { toast } = useToast();
-
   const {
     register,
     handleSubmit,
@@ -329,17 +327,41 @@ export function CreateTaskButton({ onTaskCreated }: CreateTaskButtonProps): JSX.
       labels: []
     },
   });
-
   const labels = watch('labels') || [];
-
   /**
-   * Add a new label to the form
+   * Add a new label to the form and update existingLabels if it's a new label
    */
   const addLabel = useCallback((newLabel: LabelData): void => {
     const currentLabels = [...(watch('labels') || [])];
     setValue('labels', [...currentLabels, newLabel], { shouldDirty: true });
+    const createLabelInDatabase = async () => {
+      try {
+        const response = await fetch('/api/labels', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(newLabel),
+        });
+        if (!response.ok) {
+          throw new Error('Failed to create label in database');
+        }
+        const createdLabel = await response.json();
+        setExistingLabels(prevLabels => [...prevLabels, createdLabel]);
+      } catch (error) {
+        console.error('Error creating label in database:', error);
+        toast({
+          title: "Error",
+          description: `Failed to save label to database: ${(error as Error).message}`,
+          variant: "destructive",
+        });
+      }
+    };
+    if (labelDialogOpen) {
+      createLabelInDatabase();
+    }
     setLabelDialogOpen(false);
-  }, [setValue, watch]);
+  }, [setValue, watch, labelDialogOpen, toast]);
 
   /**
    * Remove a label from the list
@@ -352,11 +374,36 @@ export function CreateTaskButton({ onTaskCreated }: CreateTaskButtonProps): JSX.
   }, [setValue, watch]);
 
   /**
+   * Fetch all labels when the dialog opens
+   */
+  const fetchLabels = useCallback(async () => {
+    setIsLoadingLabels(true);
+    try {
+      const response = await fetch('/api/labels');
+      if (!response.ok) {
+        throw new Error('Failed to fetch labels');
+      }
+      const data = await response.json();
+      setExistingLabels(data);
+    } catch (error) {
+      console.error('Error fetching labels:', error);
+      toast({
+        title: "Error",
+        description: `Failed to fetch labels: ${(error as Error).message}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingLabels(false);
+    }
+  }, [toast]);
+
+  /**
    * Handle dialog close with confirmation if form is dirty
    */
   const handleDialogClose = useCallback((open: boolean) => {
-    if (!open && isDirty) {
-      // In a real app, you might want to show a confirmation dialog here
+    if (open) {
+      fetchLabels();
+    } else if (isDirty) {
       if (confirm('You have unsaved changes. Are you sure you want to close?')) {
         reset();
         setOpen(false);
@@ -365,7 +412,7 @@ export function CreateTaskButton({ onTaskCreated }: CreateTaskButtonProps): JSX.
       }
     }
     setOpen(open);
-  }, [isDirty, reset]);
+  }, [isDirty, reset, fetchLabels]);
 
   /**
    * Submit handler for the form
@@ -380,7 +427,6 @@ export function CreateTaskButton({ onTaskCreated }: CreateTaskButtonProps): JSX.
         dueDate: data.dueDate ? new Date(data.dueDate).toISOString() : undefined,
         labels: data.labels && data.labels.length > 0 ? data.labels : undefined
       };
-
       const response = await fetch('/api/tasks', {
         method: 'POST',
         headers: {
@@ -388,14 +434,11 @@ export function CreateTaskButton({ onTaskCreated }: CreateTaskButtonProps): JSX.
         },
         body: JSON.stringify(formattedData),
       });
-
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to create task');
       }
-
       const createdTask = await response.json();
-
       if (onTaskCreated) {
         onTaskCreated(createdTask);
       }
@@ -417,14 +460,12 @@ export function CreateTaskButton({ onTaskCreated }: CreateTaskButtonProps): JSX.
       setIsSubmitting(false);
     }
   };
-
   /**
    * Handle cancel for label dialog
    */
   const handleLabelCancel = useCallback(() => {
     setLabelDialogOpen(false);
   }, []);
-
   return (
     <>
       <Dialog open={open} onOpenChange={handleDialogClose}>
@@ -434,7 +475,7 @@ export function CreateTaskButton({ onTaskCreated }: CreateTaskButtonProps): JSX.
             Create Task
           </Button>
         </DialogTrigger>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create New Task</DialogTitle>
             <DialogDescription>
@@ -443,7 +484,7 @@ export function CreateTaskButton({ onTaskCreated }: CreateTaskButtonProps): JSX.
           </DialogHeader>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div>
-              <Label htmlFor="title">Title</Label>
+              <LabelComponent htmlFor="title">Title</LabelComponent>
               <Input
                 id="title"
                 {...register('title')}
@@ -456,7 +497,7 @@ export function CreateTaskButton({ onTaskCreated }: CreateTaskButtonProps): JSX.
               )}
             </div>
             <div>
-              <Label htmlFor="description">Description</Label>
+              <LabelComponent htmlFor="description">Description</LabelComponent>
               <Textarea
                 id="description"
                 {...register('description')}
@@ -465,7 +506,7 @@ export function CreateTaskButton({ onTaskCreated }: CreateTaskButtonProps): JSX.
               />
             </div>
             <div>
-              <Label htmlFor="priority">Priority</Label>
+              <LabelComponent htmlFor="priority">Priority</LabelComponent>
               <Controller
                 name="priority"
                 control={control}
@@ -492,7 +533,7 @@ export function CreateTaskButton({ onTaskCreated }: CreateTaskButtonProps): JSX.
               )}
             </div>
             <div>
-              <Label htmlFor="status">Status</Label>
+              <LabelComponent htmlFor="status">Status</LabelComponent>
               <Controller
                 name="status"
                 control={control}
@@ -519,7 +560,7 @@ export function CreateTaskButton({ onTaskCreated }: CreateTaskButtonProps): JSX.
               )}
             </div>
             <div>
-              <Label htmlFor="dueDate">Due Date</Label>
+              <LabelComponent htmlFor="dueDate">Due Date</LabelComponent>
               <Input
                 type="date"
                 id="dueDate"
@@ -533,17 +574,74 @@ export function CreateTaskButton({ onTaskCreated }: CreateTaskButtonProps): JSX.
             </div>
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <Label>Labels</Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setLabelDialogOpen(true)}
-                  className="h-8"
+                <LabelComponent htmlFor="labels">Labels</LabelComponent>
+                <div className="flex space-x-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setLabelDialogOpen(true)}
+                    className="h-8"
+                  >
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Create Label
+                  </Button>
+                </div>
+              </div>
+              <div className="mb-2">
+                <Select
+                  onValueChange={(value) => {
+                    const selectedLabel = existingLabels.find(label => label.id === value);
+                    if (selectedLabel) {
+                      const isLabelAlreadyAdded = labels.some(
+                        label => label.name === selectedLabel.name
+                      );
+                      if (!isLabelAlreadyAdded) {
+                        addLabel({
+                          name: selectedLabel.name,
+                          color: selectedLabel.color,
+                          icon: selectedLabel.icon as IconName
+                        });
+                      } else {
+                        toast({
+                          title: "Label already added",
+                          description: `The label "${selectedLabel.name}" is already added to this task.`,
+                          variant: "default",
+                        });
+                      }
+                    }
+                  }}
+                  disabled={isLoadingLabels || existingLabels.length === 0}
                 >
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Add Label
-                </Button>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select from existing labels" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {isLoadingLabels ? (
+                      <div className="flex items-center justify-center p-2">
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        Loading labels...
+                      </div>
+                    ) : existingLabels.length === 0 ? (
+                      <div className="p-2 text-center text-sm text-muted-foreground">
+                        No labels found
+                      </div>
+                    ) : (
+                      existingLabels.map((label) => (
+                        <SelectItem key={label.id} value={label.id}>
+                          <div className="flex items-center">
+                            <div
+                              className="w-3 h-3 rounded-full mr-2"
+                              style={{ backgroundColor: label.color }}
+                            ></div>
+                            <span className="mr-1">{label.name}</span>
+                            {renderIcon(label.icon as IconName, "h-3 w-3 ml-1")}
+                          </div>
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
               </div>
               <LabelsList labels={labels} onRemove={removeLabel} />
             </div>

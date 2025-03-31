@@ -13,21 +13,19 @@ import { CreateTaskButton } from './create-task-button';
  */
 interface TaskListProps {
   initialTasks: Task[];
+  onTaskCreated?: (task: Task) => void;
 }
-
 /**
  * TaskList Component - Displays a list of tasks and provides a way to create new tasks
  * @param props - Component props
  * @returns JSX element with the task list
  */
-export function TaskList({ initialTasks }: TaskListProps): JSX.Element {
+export function TaskList({ initialTasks, onTaskCreated }: TaskListProps): JSX.Element {
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
-
   useEffect(() => {
     setTasks(initialTasks);
   }, [initialTasks]);
-
   /**
    * Handle task creation
    * @param newTask - The newly created task
@@ -35,8 +33,10 @@ export function TaskList({ initialTasks }: TaskListProps): JSX.Element {
   const handleTaskCreated = (newTask: Task): void => {
     setTasks(prevTasks => [...prevTasks, newTask]);
     setIsDialogOpen(false);
+    if (onTaskCreated) {
+      onTaskCreated(newTask);
+    }
   };
-
   return (
     <>
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

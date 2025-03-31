@@ -1,25 +1,24 @@
 import { NextResponse } from 'next/server';
-import { prisma, TaskPriority, TaskStatus } from '@/lib/db';
+import { prisma } from '@/lib/db';
 import { z } from 'zod';
+import { LabelSchema } from '@/lib/label-types';
 
 /**
- * Type for label data matching the Prisma schema
+ * Enum representing task priority levels
  */
-type LabelData = {
-  name: string;
-  color: string;
-  icon: string;
-};
-
+export enum TaskPriority {
+  LOW = 'LOW',
+  MEDIUM = 'MEDIUM',
+  HIGH = 'HIGH',
+}
 /**
- * Zod schema for label validation
+ * Enum representing task status options
  */
-const LabelSchema = z.object({
-  name: z.string().min(1, 'Label name is required'),
-  color: z.string().regex(/^#([0-9A-F]{3}){1,2}$/i, 'Color must be a valid hex code'),
-  icon: z.string().min(1, 'Icon is required'),
-});
-
+export enum TaskStatus {
+  TODO = 'TODO',
+  IN_PROGRESS = 'IN_PROGRESS',
+  DONE = 'DONE',
+}
 /**
  * Zod schema for task creation validation
  */
@@ -34,7 +33,6 @@ const CreateTaskSchema = z.object({
   ),
   labels: z.array(LabelSchema).optional(),
 });
-
 /**
  * Creates a new task
  * @param request The incoming request object
@@ -43,25 +41,19 @@ const CreateTaskSchema = z.object({
 export async function POST(request: Request): Promise<NextResponse> {
   try {
     const data = await request.json();
-    
-    // Validate input data
     const validationResult = CreateTaskSchema.safeParse(data);
     if (!validationResult.success) {
       return NextResponse.json(
         {
           error: 'Validation failed',
-          details: validationResult.error.format()
+          details: validationResult.error.format() 
         },
         { status: 400 }
       );
     }
-    
     const validData = validationResult.data;
-
     // Parse the dueDate string to a proper Date object if it exists
     const dueDate = validData.dueDate ? new Date(validData.dueDate) : null;
-
-    // Create the task first (without labels)
     const task = await prisma.task.create({
       data: {
         title: validData.title,
@@ -71,23 +63,17 @@ export async function POST(request: Request): Promise<NextResponse> {
         dueDate: dueDate,
       },
     });
-
-    // Handle labels if provided
     if (validData.labels && validData.labels.length > 0) {
       for (const labelData of validData.labels) {
-        // First check if the label exists
         let labelId: string;
-
         const existingLabel = await prisma.label.findFirst({
           where: {
             name: labelData.name
           }
         });
-
         if (existingLabel) {
           labelId = existingLabel.id;
         } else {
-          // If label doesn't exist, create it first
           const newLabel = await prisma.label.create({
             data: {
               name: labelData.name,
@@ -95,11 +81,8 @@ export async function POST(request: Request): Promise<NextResponse> {
               icon: labelData.icon
             }
           });
-
           labelId = newLabel.id;
         }
-
-        // Connect the label to the task using Prisma's API
         await prisma.task.update({
           where: { id: task.id },
           data: {
@@ -110,17 +93,13 @@ export async function POST(request: Request): Promise<NextResponse> {
         });
       }
     }
-
-    // Fetch the task with labels
     const taskWithLabels = await prisma.task.findUnique({
       where: { id: task.id },
       include: { labels: true }
     });
-
     if (!taskWithLabels) {
       throw new Error('Failed to retrieve task with labels');
     }
-
     return NextResponse.json(taskWithLabels);
   } catch (error) {
     console.error('Error creating task:', error);
@@ -130,7 +109,6 @@ export async function POST(request: Request): Promise<NextResponse> {
     );
   }
 }
-
 /**
  * Retrieves all tasks
  * @returns List of tasks or error response

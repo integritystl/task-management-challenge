@@ -6,26 +6,11 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  CardFooter,
 } from '@/components/ui/card';
-import { Task, Label, TaskStatus, TaskPriority } from '@/lib/db';
-import { Tag, Check, Star, Flag, Bookmark, Heart, Bell, AlertCircle, Trash2 } from 'lucide-react';
+import { Task, Label, TaskPriority, TaskStatus } from '@/lib/db';
+import { Tag, Check, Star, Flag, Bookmark, Heart, Bell, AlertCircle } from 'lucide-react';
 import { memo } from 'react';
-import { Button } from '@/components/ui/button';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-
-// Type for icon names
-export type IconName = 'tag' | 'check' | 'star' | 'flag' | 'bookmark' | 'heart' | 'bell' | 'alertCircle';
+import { IconName } from '@/lib/label-types';
 
 const priorityColors = {
   [TaskPriority.LOW]: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200',
@@ -58,18 +43,12 @@ export const renderIcon = (iconName: IconName, className?: string) => {
     default: return <Tag className={className} />;
   }
 };
-
-/**
- * Props for the TaskLabel component
- */
-interface TaskLabelProps {
-  label: Label;
-}
-
 /**
  * TaskLabel Component - Displays a single label with icon and name
  */
-const TaskLabel = ({ label }: TaskLabelProps) => {
+const TaskLabel = ({ label }: {
+  label: Label;
+}) => {
   return (
     <div
       className="flex items-center rounded-md px-2 py-1 text-white transition-transform hover:scale-105"
@@ -82,14 +61,12 @@ const TaskLabel = ({ label }: TaskLabelProps) => {
     </div>
   );
 };
-
 /**
  * Props for the TaskCard component
  */
 interface TaskCardProps {
   task: Task & { labels?: Label[]; };
 }
-
 /**
  * TaskCard Component - Displays a task with its details in a card format
  * @param props - Component props
@@ -104,7 +81,6 @@ function TaskCardComponent({ task }: TaskCardProps) {
   const isOverdue = dueDate instanceof Date && !isNaN(dueDate.getTime()) &&
     dueDate < new Date() &&
     task.status !== TaskStatus.DONE;
-
   // Format date safely
   const formatDate = (date: Date | null): string => {
     if (date instanceof Date && !isNaN(date.getTime())) {
@@ -112,7 +88,6 @@ function TaskCardComponent({ task }: TaskCardProps) {
     }
     return 'Not set';
   };
-
   return (
     <Card className="transition-shadow hover:shadow-md">
       <CardHeader className="pb-2">
@@ -144,7 +119,6 @@ function TaskCardComponent({ task }: TaskCardProps) {
         ) : (
           <p className="text-gray-400 italic mb-4">No description provided</p>
         )}
-
         <div className="flex flex-wrap items-center gap-2">
           <Badge
             className={statusColors[task.status as keyof typeof statusColors]}
