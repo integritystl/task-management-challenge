@@ -7,13 +7,45 @@ datasource db {
   url      = "file:./dev.db"
 }
 
+/// Enum for task priority levels
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+/// Enum for task status options
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+/// Task model representing a single task in the system
 model Task {
-  id          String    @id @default(cuid())
+  id          String       @id @default(cuid())
   title       String
   description String?
-  priority    String    @default("MEDIUM")
-  status      String    @default("TODO")
+  priority    TaskPriority @default(MEDIUM)
+  status      TaskStatus   @default(TODO)
   dueDate     DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  labels      Label[]      @relation("TaskToLabel")
+
+  @@index([status, priority])
+  @@index([dueDate])
+}
+
+/// Label model for task categorization
+model Label {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  color     String
+  icon      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tasks     Task[]   @relation("TaskToLabel")
+
+  @@index([name])
 }
