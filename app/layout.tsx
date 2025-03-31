@@ -4,7 +4,6 @@ import { Inter } from 'next/font/google';
 import { Toaster } from '@/components/ui/toaster';
 
 const inter = Inter({ subsets: ['latin'], display: 'swap' });
-
 export const metadata: Metadata = {
   title: 'Task Management Challenge',
   description: 'A task management challenge for javascript developers at IntegrityXD',
@@ -12,17 +11,14 @@ export const metadata: Metadata = {
   authors: [{ name: 'IntegrityXD' }],
   creator: 'IntegrityXD',
 };
-
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   themeColor: '#ffffff',
 };
-
 interface RootLayoutProps {
   children: React.ReactNode;
 }
-
 export default function RootLayout({
   children,
 }: RootLayoutProps) {

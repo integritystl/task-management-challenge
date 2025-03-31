@@ -3,64 +3,64 @@
 import { useState, useEffect, JSX } from 'react';
 import { CreateTaskButton } from '@/components/create-task-button';
 import { ManageLabelsButton } from '@/components/manage-labels-button';
-import { Task } from '@/lib/db';
+import { TaskFilter } from '@/components/task-filter';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { LoadingSpinner } from '@/components/loading-spinner';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { useTasksApi, TaskFilterOptions } from '@/hooks/use-tasks-api';
+import { Badge } from '@/components/ui/badge';
 import { TaskList } from '@/components/task-list';
+import { X } from 'lucide-react';
 
-/**
- * Fetches all tasks from the API
- * @returns {Promise<Task[]>} A promise that resolves to an array of tasks
- */
-const fetchTasks = async (): Promise<Task[]> => {
-  const res = await fetch('/api/tasks', {
-    cache: 'no-store'
-  });
-  if (!res.ok) {
-    throw new Error(`Failed to fetch tasks: ${res.statusText}`);
-  }
-
-  return res.json();
-};
 /**
  * Home component that displays the task management dashboard
  * @returns {JSX.Element} The rendered Home component
  */
 export default function Home(): JSX.Element {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const {
+    tasks,
+    isLoading,
+    activeFilters,
+    resetTrigger,
+    fetchTasks,
+    clearFilters
+  } = useTasksApi();
   const [error, setError] = useState<Error | null>(null);
   const [isRefetching, setIsRefetching] = useState<boolean>(false);
+  const hasActiveFilters = (
+    !!activeFilters.priority ||
+    !!activeFilters.status ||
+    (activeFilters.labelIds && activeFilters.labelIds.length > 0)
+  );
   useEffect(() => {
     loadTasks();
   }, []);
   const loadTasks = async (): Promise<void> => {
-    setIsLoading(true);
     setError(null);
     try {
-      const fetchedTasks = await fetchTasks();
-      setTasks(fetchedTasks);
+      await fetchTasks();
     } catch (err) {
       setError(err instanceof Error ? err : new Error('An unknown error occurred'));
-    } finally {
-      setIsLoading(false);
     }
   };
   const handleRefresh = async (): Promise<void> => {
     setIsRefetching(true);
     try {
-      const fetchedTasks = await fetchTasks();
-      setTasks(fetchedTasks);
+      await fetchTasks();
     } catch (err) {
       setError(err instanceof Error ? err : new Error('An unknown error occurred'));
     } finally {
       setIsRefetching(false);
     }
   };
-  const handleTaskCreated = (newTask: Task): void => {
-    setTasks(prevTasks => [...prevTasks, newTask]);
+  const handleTaskCreated = (): void => {
+    loadTasks();
+  };
+  const handleFilterChange = (filters: TaskFilterOptions): void => {
+    fetchTasks(filters).catch(err => {
+      setError(err instanceof Error ? err : new Error('An error occurred while filtering tasks'));
+    });
   };
   return (
     <ErrorBoundary>
@@ -70,6 +70,11 @@ export default function Home(): JSX.Element {
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
               <h1 className="text-2xl sm:text-4xl font-bold">Task Management</h1>
               <div className="flex space-x-2">
+                <TaskFilter
+                  onFilterChange={handleFilterChange}
+                  activeFilters={activeFilters}
+                  resetTrigger={resetTrigger}
+                />
                 <ManageLabelsButton />
                 <CreateTaskButton onTaskCreated={handleTaskCreated} />
               </div>
@@ -94,7 +99,43 @@ export default function Home(): JSX.Element {
           ) : isLoading || isRefetching ? (
             <LoadingSpinner />
             ) : (
-            <TaskList initialTasks={tasks} onTaskCreated={handleTaskCreated} />
+                <>
+                  {hasActiveFilters && (
+                    <div className="mb-4 flex flex-wrap gap-2 items-center">
+                      <span className="text-sm font-medium">Active filters:</span>
+                      {activeFilters.priority && (
+                        <Badge variant="secondary" className="flex items-center gap-1">
+                          Priority: {activeFilters.priority}
+                        </Badge>
+                      )}
+                      {activeFilters.status && (
+                        <Badge variant="secondary" className="flex items-center gap-1">
+                          Status: {activeFilters.status.replace('_', ' ')}
+                        </Badge>
+                      )}
+                      {activeFilters.labelIds && activeFilters.labelIds.length > 0 && (
+                        <Badge variant="secondary" className="flex items-center gap-1">
+                          Labels: {activeFilters.labelIds.length}
+                        </Badge>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 px-2 text-xs"
+                        onClick={clearFilters}
+                      >
+                        <X className="h-3 w-3 mr-1" />
+                        Clear all
+                      </Button>
+                    </div>
+                  )}
+                  <TaskList
+                    initialTasks={tasks}
+                    onTaskCreated={handleTaskCreated}
+                    hasActiveFilters={hasActiveFilters}
+                    onClearFilters={clearFilters}
+                  />
+                </>
           )}
         </main>
         <footer className="bg-background border-t py-6">

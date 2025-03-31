@@ -3,7 +3,7 @@
 import { JSX, useEffect, useState } from 'react';
 import { TaskCard } from './task-card';
 import { Task } from '@/lib/db';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { CreateTaskButton } from './create-task-button';
@@ -14,13 +14,15 @@ import { CreateTaskButton } from './create-task-button';
 interface TaskListProps {
   initialTasks: Task[];
   onTaskCreated?: (task: Task) => void;
+  hasActiveFilters?: boolean;
+  onClearFilters?: () => void;
 }
 /**
  * TaskList Component - Displays a list of tasks and provides a way to create new tasks
  * @param props - Component props
  * @returns JSX element with the task list
  */
-export function TaskList({ initialTasks, onTaskCreated }: TaskListProps): JSX.Element {
+export function TaskList({ initialTasks, onTaskCreated, hasActiveFilters = false, onClearFilters }: TaskListProps): JSX.Element {
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   useEffect(() => {
@@ -59,14 +61,35 @@ export function TaskList({ initialTasks, onTaskCreated }: TaskListProps): JSX.El
       ) : (
         <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
           <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-8 w-full max-w-md mx-auto shadow-sm">
-            <h3 className="text-xl mb-4 font-semibold">No Tasks Have Been Created</h3>
-            <Button
-              onClick={() => setIsDialogOpen(true)}
-              className="inline-flex items-center justify-center"
-            >
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Create Task
-            </Button>
+              {hasActiveFilters ? (
+                <>
+                  <h3 className="text-xl mb-4 font-semibold">No Tasks Match Your Filters</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Try adjusting your filter criteria or clear all filters to see more tasks.
+                  </p>
+                  {onClearFilters && (
+                    <Button
+                      onClick={onClearFilters}
+                      variant="outline"
+                      className="mb-2 w-full"
+                    >
+                      <X className="mr-2 h-4 w-4" />
+                      Clear All Filters
+                    </Button>
+                  )}
+                </>
+              ) : (
+                <>
+                    <h3 className="text-xl mb-4 font-semibold">No Tasks Have Been Created</h3>
+                    <Button
+                      onClick={() => setIsDialogOpen(true)}
+                      className="inline-flex items-center justify-center"
+                    >
+                      <PlusCircle className="mr-2 h-4 w-4" />
+                      Create Task
+                    </Button>
+                </>
+              )}
           </div>
         </div>
       )}

@@ -46,8 +46,15 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table';
+
+import {
+  IconName,
+  ICON_VALUES,
+  PREDEFINED_COLORS,
+  LabelSchema,
+  LabelData,
+} from '../lib/label-types';
 import { useLabelsApi } from '../hooks/use-labels-api';
-import { ICON_VALUES, IconName, LabelData, LabelSchema, PREDEFINED_COLORS } from '@/lib/label-types';
 
 /**
  * Props for the LabelFormDialog component
@@ -287,7 +294,6 @@ export function ManageLabelsButton(): JSX.Element {
     if (!window.confirm('Are you sure you want to delete this label? It will be removed from all tasks.')) {
       return;
     }
-
     try {
       await deleteLabel(id);
       toast({
@@ -361,7 +367,6 @@ export function ManageLabelsButton(): JSX.Element {
                     ></div>
                     <div className="font-medium">{label.name}</div>
                   </div>
-
                   <div className="flex space-x-2">
                     <Button
                       variant="outline"
@@ -479,8 +484,7 @@ export function ManageLabelsButton(): JSX.Element {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
           <Button variant="outline" aria-label="Manage Labels">
-            <Tags className="mr-2 h-4 w-4" />
-            Manage Labels
+            <Tags className="h-4 w-4" />
           </Button>
         </DialogTrigger>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">

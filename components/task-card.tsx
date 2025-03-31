@@ -7,9 +7,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Task, Label, TaskPriority, TaskStatus } from '@/lib/db';
+import { Task, Label } from '@/lib/db';
 import { Tag, Check, Star, Flag, Bookmark, Heart, Bell, AlertCircle } from 'lucide-react';
 import { memo } from 'react';
+import { TaskPriority, TaskStatus } from '@/app/api/tasks/route';
 import { IconName } from '@/lib/label-types';
 
 const priorityColors = {
@@ -17,13 +18,11 @@ const priorityColors = {
   [TaskPriority.MEDIUM]: 'bg-orange-100 text-orange-800 hover:bg-orange-200',
   [TaskPriority.HIGH]: 'bg-red-100 text-red-800 hover:bg-red-200',
 } as const;
-
 const statusColors = {
   [TaskStatus.TODO]: 'bg-gray-100 text-gray-800 hover:bg-gray-200',
   [TaskStatus.IN_PROGRESS]: 'bg-purple-100 text-purple-800 hover:bg-purple-200',
   [TaskStatus.DONE]: 'bg-green-100 text-green-800 hover:bg-green-200',
 } as const;
-
 /**
  * Helper function to render the appropriate icon component
  * @param iconName - Name of the icon to render
@@ -46,9 +45,7 @@ export const renderIcon = (iconName: IconName, className?: string) => {
 /**
  * TaskLabel Component - Displays a single label with icon and name
  */
-const TaskLabel = ({ label }: {
-  label: Label;
-}) => {
+const TaskLabel = ({ label }: { label: Label; }) => {
   return (
     <div
       className="flex items-center rounded-md px-2 py-1 text-white transition-transform hover:scale-105"

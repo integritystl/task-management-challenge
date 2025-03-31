@@ -26,33 +26,9 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { X, PlusCircle, Tag, Check, Star, Flag, Bookmark, Heart, Bell, AlertCircle, Loader2 } from 'lucide-react';
-import { Task, Label, TaskPriority, TaskStatus } from '@/lib/db';
-
-// Define icon type for better type safety
-type IconName = 'tag' | 'check' | 'star' | 'flag' | 'bookmark' | 'heart' | 'bell' | 'alertCircle';
-const ICON_VALUES = ['tag', 'check', 'star', 'flag', 'bookmark', 'heart', 'bell', 'alertCircle'] as const;
-
-// Predefined colors for labels
-const PREDEFINED_COLORS = [
-  '#ef4444', // red
-  '#f97316', // orange
-  '#f59e0b', // amber
-  '#10b981', // emerald
-  '#06b6d4', // cyan
-  '#3b82f6', // blue
-  '#8b5cf6', // violet
-  '#d946ef', // fuchsia
-  '#ec4899', // pink
-] as const;
-
-/**
- * Label schema for validation
- */
-const labelSchema = z.object({
-  name: z.string().min(1, 'Label name is required'),
-  color: z.string().regex(/^#([0-9A-F]{3}){1,2}$/i, 'Color must be a valid hex code'),
-  icon: z.enum(ICON_VALUES)
-});
+import { TaskPriority, TaskStatus } from '@/app/api/tasks/route';
+import { Task, Label } from '@/lib/db';
+import { ICON_VALUES, IconName, LabelData, LabelSchema, PREDEFINED_COLORS } from '@/lib/label-types';
 
 /**
  * Task schema for form validation
@@ -66,12 +42,9 @@ const taskSchema = z.object({
     (val) => !val || !isNaN(new Date(val).getTime()),
     { message: 'Invalid date format' }
   ),
-  labels: z.array(labelSchema).optional()
+  labels: z.array(LabelSchema).optional()
 });
-
-type LabelData = z.infer<typeof labelSchema>;
 type TaskFormData = z.infer<typeof taskSchema>;
-
 /**
  * Props for the LabelsList component
  */
@@ -79,7 +52,6 @@ interface LabelsListProps {
   labels: LabelData[];
   onRemove: (index: number) => void;
 }
-
 /**
  * Props for the LabelDialog component
  */
@@ -89,14 +61,12 @@ interface LabelDialogProps {
   onAddLabel: (label: LabelData) => void;
   onCancel: () => void;
 }
-
 /**
  * Props for the CreateTaskButton component
  */
 interface CreateTaskButtonProps {
   onTaskCreated?: (task: Task) => void;
 }
-
 /**
  * Helper function to render the appropriate icon component
  * @param iconName - Name of the icon to render
@@ -116,7 +86,6 @@ const renderIcon = (iconName: IconName, className?: string): JSX.Element => {
     default: return <Tag className={className} />;
   }
 };
-
 /**
  * LabelsList Component - Displays a list of labels with remove functionality
  */
@@ -146,7 +115,6 @@ const LabelsList = ({ labels, onRemove }: LabelsListProps): JSX.Element | null =
     </div>
   );
 };
-
 /**
  * LabelDialog Component - Dialog for creating and customizing labels
  */
@@ -157,14 +125,13 @@ const LabelDialog = ({
   onCancel
 }: LabelDialogProps): JSX.Element => {
   const { register, handleSubmit, watch, reset, setValue, control, formState: { errors, isValid } } = useForm<LabelData>({
-    resolver: zodResolver(labelSchema),
+    resolver: zodResolver(LabelSchema),
     defaultValues: {
       name: '',
       color: PREDEFINED_COLORS[0],
       icon: 'tag' as IconName
     }
   });
-
   const currentLabel = watch();
   const handleOpenChange = useCallback((open: boolean) => {
     if (!open) {
@@ -176,7 +143,6 @@ const LabelDialog = ({
     onAddLabel(data);
     reset();
   }, [onAddLabel, reset]);
-
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
@@ -295,7 +261,6 @@ const LabelDialog = ({
     </Dialog>
   );
 };
-
 /**
  * CreateTaskButton Component - Button and dialog for creating new tasks
  * @param props - Component props
@@ -308,6 +273,7 @@ export function CreateTaskButton({ onTaskCreated }: CreateTaskButtonProps): JSX.
   const [existingLabels, setExistingLabels] = useState<Label[]>([]);
   const [isLoadingLabels, setIsLoadingLabels] = useState<boolean>(false);
   const { toast } = useToast();
+
   const {
     register,
     handleSubmit,
@@ -362,7 +328,6 @@ export function CreateTaskButton({ onTaskCreated }: CreateTaskButtonProps): JSX.
     }
     setLabelDialogOpen(false);
   }, [setValue, watch, labelDialogOpen, toast]);
-
   /**
    * Remove a label from the list
    * @param index - Index of the label to remove
@@ -372,7 +337,6 @@ export function CreateTaskButton({ onTaskCreated }: CreateTaskButtonProps): JSX.
     currentLabels.splice(index, 1);
     setValue('labels', currentLabels, { shouldDirty: true });
   }, [setValue, watch]);
-
   /**
    * Fetch all labels when the dialog opens
    */
@@ -396,14 +360,15 @@ export function CreateTaskButton({ onTaskCreated }: CreateTaskButtonProps): JSX.
       setIsLoadingLabels(false);
     }
   }, [toast]);
-
   /**
    * Handle dialog close with confirmation if form is dirty
    */
   const handleDialogClose = useCallback((open: boolean) => {
     if (open) {
+      // Fetch labels when dialog opens
       fetchLabels();
     } else if (isDirty) {
+      // In a real app, you might want to show a confirmation dialog here
       if (confirm('You have unsaved changes. Are you sure you want to close?')) {
         reset();
         setOpen(false);
@@ -413,7 +378,6 @@ export function CreateTaskButton({ onTaskCreated }: CreateTaskButtonProps): JSX.
     }
     setOpen(open);
   }, [isDirty, reset, fetchLabels]);
-
   /**
    * Submit handler for the form
    * @param data - Form data
@@ -442,6 +406,11 @@ export function CreateTaskButton({ onTaskCreated }: CreateTaskButtonProps): JSX.
       if (onTaskCreated) {
         onTaskCreated(createdTask);
       }
+      toast({
+        title: "Task created",
+        description: "Your task has been successfully created.",
+        variant: "default",
+      });
       toast({
         title: "Task created",
         description: "Your task has been successfully created.",

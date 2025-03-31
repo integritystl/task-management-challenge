@@ -45,12 +45,13 @@ export async function POST(request: Request): Promise<NextResponse> {
     if (!validationResult.success) {
       return NextResponse.json(
         {
-          error: 'Validation failed',
+          error: 'Validation failed', 
           details: validationResult.error.format() 
         },
         { status: 400 }
       );
     }
+
     const validData = validationResult.data;
     // Parse the dueDate string to a proper Date object if it exists
     const dueDate = validData.dueDate ? new Date(validData.dueDate) : null;
@@ -81,6 +82,7 @@ export async function POST(request: Request): Promise<NextResponse> {
               icon: labelData.icon
             }
           });
+
           labelId = newLabel.id;
         }
         await prisma.task.update({
@@ -97,6 +99,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       where: { id: task.id },
       include: { labels: true }
     });
+
     if (!taskWithLabels) {
       throw new Error('Failed to retrieve task with labels');
     }
@@ -110,15 +113,43 @@ export async function POST(request: Request): Promise<NextResponse> {
   }
 }
 /**
- * Retrieves all tasks
- * @returns List of tasks or error response
+ * Retrieves tasks with optional filtering
+ * @param request The incoming request object
+ * @returns List of filtered tasks or error response
  */
-export async function GET(): Promise<NextResponse> {
+export async function GET(request: Request): Promise<NextResponse> {
   try {
+    const { searchParams } = new URL(request.url);
+    const priority = searchParams.get('priority');
+    const status = searchParams.get('status');
+    const labelIds = searchParams.getAll('labelId');
+    const sortBy = searchParams.get('sortBy') || 'dueDate';
+    const sortOrder = searchParams.get('sortOrder') || 'asc';
+    const where: any = {};
+    if (priority && Object.values(TaskPriority).includes(priority as TaskPriority)) {
+      where.priority = priority;
+    }
+    if (status && Object.values(TaskStatus).includes(status as TaskStatus)) {
+      where.status = status;
+    }
+    if (labelIds.length > 0) {
+      where.labels = {
+        some: {
+          id: {
+            in: labelIds
+          }
+        }
+      };
+    }
+    const orderBy: any = {};
+    if (['title', 'dueDate', 'priority', 'status', 'createdAt'].includes(sortBy)) {
+      orderBy[sortBy] = sortOrder === 'desc' ? 'desc' : 'asc';
+    } else {
+      orderBy.dueDate = 'asc';
+    }
     const tasks = await prisma.task.findMany({
-      orderBy: {
-        dueDate: 'asc',
-      },
+      where,
+      orderBy,
       include: {
         labels: true,
       },
