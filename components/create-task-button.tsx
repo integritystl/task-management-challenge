@@ -49,12 +49,18 @@ export function CreateTaskButton() {
 
   const onSubmit = async (data: TaskFormData) => {
     try {
+      // Ensure dueDate is properly formatted as an ISO string if it exists
+      const formattedData = {
+        ...data,
+        dueDate: data.dueDate ? new Date(data.dueDate).toISOString() : undefined
+      };
+
       const response = await fetch('/api/tasks', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(formattedData),
       });
 
       if (!response.ok) {

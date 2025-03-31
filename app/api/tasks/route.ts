@@ -6,13 +6,24 @@ export async function POST(request: Request) {
   try {
     const data = await request.json();
     
+    // Parse the dueDate string to a proper Date object if it exists
+    const dueDate = data.dueDate ? new Date(data.dueDate) : null;
+    
+    // Validate that the date is valid before saving
+    if (data.dueDate && isNaN(dueDate!.getTime())) {
+      return NextResponse.json(
+        { error: 'Invalid due date format' },
+        { status: 400 }
+      );
+    }
+    
     const task = await prisma.task.create({
       data: {
         title: data.title,
         description: data.description,
         priority: data.priority,
         status: data.status,
-        dueDate: data.dueDate ? new Date(data.dueDate) : null,
+        dueDate: dueDate,
       },
     });
 
