@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Exit on error. Needed for Husky to properly catch failures
+set -e
+
+npm run type-check
+npx lint-staged
+npm run build
+npm run test

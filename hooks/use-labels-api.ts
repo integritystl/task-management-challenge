@@ -1,5 +1,5 @@
 import { Label } from '@/lib/db';
-import { LabelData } from '@/lib/label-types';
+import { LabelData } from '@/types/label';
 import { useState, useCallback } from 'react';
 
 /**

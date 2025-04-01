@@ -1,24 +1,10 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { z } from 'zod';
-import { LabelSchema } from '@/lib/label-types';
+import { TaskPriority, TaskStatus, Prisma } from '@prisma/client';
+import { LabelSchema } from '@/types/label';
 
-/**
- * Enum representing task priority levels
- */
-export enum TaskPriority {
-  LOW = 'LOW',
-  MEDIUM = 'MEDIUM',
-  HIGH = 'HIGH',
-}
-/**
- * Enum representing task status options
- */
-export enum TaskStatus {
-  TODO = 'TODO',
-  IN_PROGRESS = 'IN_PROGRESS',
-  DONE = 'DONE',
-}
+
 /**
  * Zod schema for task creation validation
  */
@@ -27,10 +13,10 @@ const CreateTaskSchema = z.object({
   description: z.string().optional(),
   priority: z.nativeEnum(TaskPriority).default(TaskPriority.MEDIUM),
   status: z.nativeEnum(TaskStatus).default(TaskStatus.TODO),
-  dueDate: z.string().optional().refine(
-    (val) => !val || !isNaN(new Date(val).getTime()),
-    { message: 'Invalid date format' }
-  ),
+  dueDate: z
+    .string()
+    .optional()
+    .refine(val => !val || !isNaN(new Date(val).getTime()), { message: 'Invalid date format' }),
   labels: z.array(LabelSchema).optional(),
 });
 /**
@@ -45,15 +31,13 @@ export async function POST(request: Request): Promise<NextResponse> {
     if (!validationResult.success) {
       return NextResponse.json(
         {
-          error: 'Validation failed', 
-          details: validationResult.error.format() 
+          error: 'Validation failed',
+          details: validationResult.error.format(),
         },
         { status: 400 }
       );
     }
-
     const validData = validationResult.data;
-    // Parse the dueDate string to a proper Date object if it exists
     const dueDate = validData.dueDate ? new Date(validData.dueDate) : null;
     const task = await prisma.task.create({
       data: {
@@ -69,8 +53,8 @@ export async function POST(request: Request): Promise<NextResponse> {
         let labelId: string;
         const existingLabel = await prisma.label.findFirst({
           where: {
-            name: labelData.name
-          }
+            name: labelData.name,
+          },
         });
         if (existingLabel) {
           labelId = existingLabel.id;
@@ -79,8 +63,8 @@ export async function POST(request: Request): Promise<NextResponse> {
             data: {
               name: labelData.name,
               color: labelData.color,
-              icon: labelData.icon
-            }
+              icon: labelData.icon,
+            },
           });
 
           labelId = newLabel.id;
@@ -89,17 +73,16 @@ export async function POST(request: Request): Promise<NextResponse> {
           where: { id: task.id },
           data: {
             labels: {
-              connect: { id: labelId }
-            }
-          }
+              connect: { id: labelId },
+            },
+          },
         });
       }
     }
     const taskWithLabels = await prisma.task.findUnique({
       where: { id: task.id },
-      include: { labels: true }
+      include: { labels: true },
     });
-
     if (!taskWithLabels) {
       throw new Error('Failed to retrieve task with labels');
     }
@@ -125,25 +108,29 @@ export async function GET(request: Request): Promise<NextResponse> {
     const labelIds = searchParams.getAll('labelId');
     const sortBy = searchParams.get('sortBy') || 'dueDate';
     const sortOrder = searchParams.get('sortOrder') || 'asc';
-    const where: any = {};
+    const where: Prisma.TaskWhereInput = {};
     if (priority && Object.values(TaskPriority).includes(priority as TaskPriority)) {
-      where.priority = priority;
+      where.priority = priority as TaskPriority;
     }
     if (status && Object.values(TaskStatus).includes(status as TaskStatus)) {
-      where.status = status;
+      where.status = status as TaskStatus;
     }
     if (labelIds.length > 0) {
       where.labels = {
         some: {
           id: {
-            in: labelIds
-          }
-        }
+            in: labelIds,
+          },
+        },
       };
     }
-    const orderBy: any = {};
+    const orderBy: Prisma.TaskOrderByWithRelationInput = {};
     if (['title', 'dueDate', 'priority', 'status', 'createdAt'].includes(sortBy)) {
-      orderBy[sortBy] = sortOrder === 'desc' ? 'desc' : 'asc';
+      if (sortBy === 'title') orderBy.title = sortOrder === 'desc' ? 'desc' : 'asc';
+      else if (sortBy === 'dueDate') orderBy.dueDate = sortOrder === 'desc' ? 'desc' : 'asc';
+      else if (sortBy === 'priority') orderBy.priority = sortOrder === 'desc' ? 'desc' : 'asc';
+      else if (sortBy === 'status') orderBy.status = sortOrder === 'desc' ? 'desc' : 'asc';
+      else if (sortBy === 'createdAt') orderBy.createdAt = sortOrder === 'desc' ? 'desc' : 'asc';
     } else {
       orderBy.dueDate = 'asc';
     }

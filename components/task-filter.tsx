@@ -1,15 +1,11 @@
 import { useState, useEffect, JSX } from 'react';
 import { Check, Filter, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { TaskPriority, TaskStatus } from '@/app/api/tasks/route';
-import { Label } from '@/lib/db';
+import { TaskPriority, TaskStatus } from '@prisma/client';
+import { Label } from '@/types/label';
 import { useLabelsApi } from '@/hooks/use-labels-api';
 import { TaskFilterOptions } from '@/hooks/use-tasks-api';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Command,
   CommandGroup,
@@ -32,12 +28,17 @@ interface TaskFilterProps {
   activeFilters: TaskFilterOptions;
   resetTrigger?: number;
 }
+
 /**
  * TaskFilter component for filtering tasks in the navigation header
  * @param props - Component props
  * @returns JSX element with the filter UI
  */
-export function TaskFilter({ onFilterChange, activeFilters, resetTrigger = 0 }: TaskFilterProps): JSX.Element {
+export function TaskFilter({
+  onFilterChange,
+  activeFilters,
+  resetTrigger = 0,
+}: TaskFilterProps): JSX.Element {
   const { labels, fetchLabels, isLoading: isLabelsLoading } = useLabelsApi();
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [selectedPriority, setSelectedPriority] = useState<TaskPriority | null>(
@@ -49,19 +50,23 @@ export function TaskFilter({ onFilterChange, activeFilters, resetTrigger = 0 }: 
   const [selectedLabels, setSelectedLabels] = useState<Label[]>([]);
   const [sortBy, setSortBy] = useState<string>(activeFilters.sortBy || 'dueDate');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(activeFilters.sortOrder || 'asc');
+
+  // Load labels on component mount
   useEffect(() => {
     fetchLabels().catch(console.error);
   }, [fetchLabels]);
+
+  // Set selected labels based on active filters
   useEffect(() => {
     if (activeFilters.labelIds && activeFilters.labelIds.length > 0 && labels.length > 0) {
-      const filteredLabels = labels.filter(label =>
-        activeFilters.labelIds?.includes(label.id)
-      );
+      const filteredLabels = labels.filter(label => activeFilters.labelIds?.includes(label.id));
       setSelectedLabels(filteredLabels);
     } else {
       setSelectedLabels([]);
     }
   }, [activeFilters.labelIds, labels]);
+
+  // Reset filter values when resetTrigger changes
   useEffect(() => {
     if (resetTrigger > 0) {
       setSelectedPriority(null);
@@ -71,6 +76,8 @@ export function TaskFilter({ onFilterChange, activeFilters, resetTrigger = 0 }: 
       setSortOrder('asc');
     }
   }, [resetTrigger]);
+
+  // Apply filters when any filter value changes
   const applyFilters = (): void => {
     const newFilters: TaskFilterOptions = {
       priority: selectedPriority,
@@ -79,18 +86,24 @@ export function TaskFilter({ onFilterChange, activeFilters, resetTrigger = 0 }: 
       sortBy,
       sortOrder,
     };
+
     onFilterChange(newFilters);
     setIsOpen(false);
   };
+
+  // Clear all filters
   const clearFilters = (): void => {
     setSelectedPriority(null);
     setSelectedStatus(null);
     setSelectedLabels([]);
     setSortBy('dueDate');
     setSortOrder('asc');
+
     onFilterChange({});
     setIsOpen(false);
   };
+
+  // Toggle label selection
   const toggleLabel = (label: Label): void => {
     setSelectedLabels(prev => {
       const isSelected = prev.some(l => l.id === label.id);
@@ -101,11 +114,11 @@ export function TaskFilter({ onFilterChange, activeFilters, resetTrigger = 0 }: 
       }
     });
   };
-  const activeFilterCount = (
-    (selectedPriority ? 1 : 0) +
-    (selectedStatus ? 1 : 0) +
-    selectedLabels.length
-  );
+
+  // Count active filters
+  const activeFilterCount =
+    (selectedPriority ? 1 : 0) + (selectedStatus ? 1 : 0) + selectedLabels.length;
+
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
@@ -132,46 +145,47 @@ export function TaskFilter({ onFilterChange, activeFilters, resetTrigger = 0 }: 
           <CommandInput placeholder="Search labels..." />
           <CommandList>
             <CommandGroup heading="Priority">
-              {Object.values(TaskPriority).map((priority) => (
+              <CommandSeparator />
+              {Object.values(TaskPriority).map(priority => (
                 <CommandItem
                   key={priority}
-                  onSelect={() => setSelectedPriority(
-                    selectedPriority === priority ? null : priority as TaskPriority
-                  )}
+                  onSelect={() =>
+                    setSelectedPriority(
+                      selectedPriority === priority ? null : (priority as TaskPriority)
+                    )
+                  }
                   className="flex items-center justify-between"
                 >
                   <span>{priority}</span>
-                  {selectedPriority === priority && (
-                    <Check className="h-4 w-4" />
-                  )}
+                  {selectedPriority === priority && <Check className="h-4 w-4" />}
                 </CommandItem>
               ))}
             </CommandGroup>
             <CommandSeparator />
             <CommandGroup heading="Status">
-              {Object.values(TaskStatus).map((status) => (
+              <CommandSeparator />
+              {Object.values(TaskStatus).map(status => (
                 <CommandItem
                   key={status}
-                  onSelect={() => setSelectedStatus(
-                    selectedStatus === status ? null : status as TaskStatus
-                  )}
+                  onSelect={() =>
+                    setSelectedStatus(selectedStatus === status ? null : (status as TaskStatus))
+                  }
                   className="flex items-center justify-between"
                 >
                   <span>{status.replace('_', ' ')}</span>
-                  {selectedStatus === status && (
-                    <Check className="h-4 w-4" />
-                  )}
+                  {selectedStatus === status && <Check className="h-4 w-4" />}
                 </CommandItem>
               ))}
             </CommandGroup>
             <CommandSeparator />
             <CommandGroup heading="Labels">
+              <CommandSeparator />
               {isLabelsLoading ? (
                 <CommandItem disabled>Loading labels...</CommandItem>
               ) : labels.length === 0 ? (
                 <CommandItem disabled>No labels available</CommandItem>
               ) : (
-                labels.map((label) => (
+                labels.map(label => (
                   <CommandItem
                     key={label.id}
                     onSelect={() => toggleLabel(label)}
@@ -184,21 +198,17 @@ export function TaskFilter({ onFilterChange, activeFilters, resetTrigger = 0 }: 
                       />
                       <span>{label.name}</span>
                     </div>
-                    {selectedLabels.some(l => l.id === label.id) && (
-                      <Check className="h-4 w-4" />
-                    )}
+                    {selectedLabels.some(l => l.id === label.id) && <Check className="h-4 w-4" />}
                   </CommandItem>
                 ))
               )}
             </CommandGroup>
             <CommandSeparator />
             <CommandGroup heading="Sort">
+              <CommandSeparator />
               <div className="flex items-center justify-between p-2">
                 <span className="text-sm">Sort by:</span>
-                <Select
-                  value={sortBy}
-                  onValueChange={(value) => setSortBy(value)}
-                >
+                <Select value={sortBy} onValueChange={value => setSortBy(value)}>
                   <SelectTrigger className="w-[140px] h-8">
                     <SelectValue placeholder="Sort by" />
                   </SelectTrigger>
@@ -215,7 +225,7 @@ export function TaskFilter({ onFilterChange, activeFilters, resetTrigger = 0 }: 
                 <span className="text-sm">Order:</span>
                 <Select
                   value={sortOrder}
-                  onValueChange={(value) => setSortOrder(value as 'asc' | 'desc')}
+                  onValueChange={value => setSortOrder(value as 'asc' | 'desc')}
                 >
                   <SelectTrigger className="w-[140px] h-8">
                     <SelectValue placeholder="Order" />
@@ -229,20 +239,11 @@ export function TaskFilter({ onFilterChange, activeFilters, resetTrigger = 0 }: 
             </CommandGroup>
           </CommandList>
           <div className="flex items-center justify-between p-3 border-t">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={clearFilters}
-              className="text-xs h-8"
-            >
+            <Button variant="ghost" size="sm" onClick={clearFilters} className="text-xs h-8">
               <X className="h-3 w-3 mr-1" />
               Clear
             </Button>
-            <Button
-              size="sm"
-              onClick={applyFilters}
-              className="text-xs h-8"
-            >
+            <Button size="sm" onClick={applyFilters} className="text-xs h-8">
               Apply Filters
             </Button>
           </div>

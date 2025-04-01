@@ -1,5 +1,4 @@
 import { z } from 'zod';
-
 // Define icon type for better type safety
 export type IconName = 'tag' | 'check' | 'star' | 'flag' | 'bookmark' | 'heart' | 'bell' | 'alertCircle';
 export const ICON_VALUES = ['tag', 'check', 'star', 'flag', 'bookmark', 'heart', 'bell', 'alertCircle'] as const;

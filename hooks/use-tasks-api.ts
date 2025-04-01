@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Task } from '@/lib/db';
-import { TaskPriority, TaskStatus } from '@/app/api/tasks/route';
+import { TaskPriority, TaskStatus } from '@prisma/client';
 
 /**
  * Interface for task filter options
@@ -50,35 +50,53 @@ export function useTasksApi() {
    * Fetch tasks from the API with optional filtering
    * @param filters - Optional filter options
    */
-  const fetchTasks = useCallback(async (filters?: TaskFilterOptions): Promise<void> => {
-    setIsLoading(true);
-    const filtersToUse = filters || activeFilters;
-    if (filters) {
-      setActiveFilters(filters);
-    }
-    try {
-      const queryString = buildQueryString(filtersToUse);
-      const url = `/api/tasks${queryString ? `?${queryString}` : ''}`;
-      const response = await fetch(url);
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to fetch tasks');
+  const fetchTasks = useCallback(
+    async (filters?: TaskFilterOptions): Promise<void> => {
+      setIsLoading(true);
+      const filtersToUse = filters || activeFilters;
+      if (filters) {
+        setActiveFilters(filters);
       }
-      const data = await response.json();
-      setTasks(data);
-    } catch (error) {
-      console.error('Error fetching tasks:', error);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [activeFilters]);
+      try {
+        const queryString = buildQueryString(filtersToUse);
+        const url = `/api/tasks${queryString ? `?${queryString}` : ''}`;
+        const response = await fetch(url);
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to fetch tasks');
+        }
+        const data = await response.json();
+        setTasks(data);
+      } catch (error) {
+        console.error('Error fetching tasks:', error);
+        throw error;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [activeFilters]
+  );
   /**
    * Create a new task
    * @param data - Task data to create
    * @returns The created task
    */
-  const createTask = useCallback(async (data: any): Promise<Task> => {
+  /**
+   * Type for task creation data matching the CreateTaskSchema in the API
+   */
+  type TaskCreateInput = {
+    title: string;
+    description?: string;
+    priority?: TaskPriority;
+    status?: TaskStatus;
+    dueDate?: string;
+    labels?: Array<{
+      name: string;
+      color: string;
+      icon: string;
+    }>;
+  };
+  const createTask = useCallback(async (data: TaskCreateInput): Promise<Task> => {
     setIsSubmitting(true);
     try {
       const response = await fetch('/api/tasks', {

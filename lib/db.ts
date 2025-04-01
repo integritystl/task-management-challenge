@@ -16,14 +16,15 @@ const globalForPrisma = globalThis as unknown as GlobalWithPrisma;
 /**
  * Prisma client singleton to prevent multiple instances during hot reloading
  */
-export const prisma = globalForPrisma.prisma ?? new PrismaClient({
-  log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
-});
+export const prisma =
+  globalForPrisma.prisma ??
+  new PrismaClient({
+    log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
+  });
 
 // Save the instance to the global object in non-production environments
 if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.prisma = prisma;
 }
-
 // Re-export Prisma
 export * from '@prisma/client';

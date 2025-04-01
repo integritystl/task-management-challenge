@@ -1,15 +1,16 @@
 'use client';
 
-import { useState, useEffect, JSX } from 'react';
-import { UpdateTaskButton } from '@/components/update-task-button';
+import { useState, useEffect, useCallback, JSX } from 'react';
+import { CreateTaskButton } from '@/components/update-task-button';
 import { ManageLabelsButton } from '@/components/manage-labels-button';
 import { TaskFilter } from '@/components/task-filter';
+import { TasksContainer } from '@/components/tasks-container';
 import { ErrorBoundary } from '@/components/error-boundary';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { useTasksApi, TaskFilterOptions } from '@/hooks/use-tasks-api';
-import { Badge } from '@/components/ui/badge';
 import { TaskList } from '@/components/task-list';
+import { Badge } from '@/components/ui/badge';
 import { X } from 'lucide-react';
 
 /**
@@ -17,14 +18,7 @@ import { X } from 'lucide-react';
  * @returns {JSX.Element} The rendered Home component
  */
 export default function Home(): JSX.Element {
-  const {
-    tasks,
-    isLoading,
-    activeFilters,
-    resetTrigger,
-    fetchTasks,
-    clearFilters
-  } = useTasksApi();
+  const { tasks, isLoading, activeFilters, resetTrigger, fetchTasks, clearFilters } = useTasksApi();
   const [error, setError] = useState<Error | null>(null);
   const [isRefetching, setIsRefetching] = useState<boolean>(false);
   const hasActiveFilters = (
@@ -32,17 +26,17 @@ export default function Home(): JSX.Element {
     !!activeFilters.status ||
     (activeFilters.labelIds && activeFilters.labelIds.length > 0)
   );
-  useEffect(() => {
-    loadTasks();
-  }, []);
-  const loadTasks = async (): Promise<void> => {
+  const loadTasks = useCallback(async (): Promise<void> => {
     setError(null);
     try {
       await fetchTasks();
     } catch (err) {
       setError(err instanceof Error ? err : new Error('An unknown error occurred'));
     }
-  };
+  }, [fetchTasks, setError]);
+  useEffect(() => {
+    void loadTasks();
+  }, [loadTasks]);
   const handleRefresh = async (): Promise<void> => {
     setIsRefetching(true);
     try {
@@ -52,7 +46,7 @@ export default function Home(): JSX.Element {
     } finally {
       setIsRefetching(false);
     }
-  };
+  }
   const handleTaskCreated = (): void => {
     loadTasks();
   };
@@ -64,18 +58,18 @@ export default function Home(): JSX.Element {
   return (
     <ErrorBoundary>
       <div className="flex flex-col min-h-screen">
-        <header className="sticky top-0 z-10 bg-background border-b shadow-sm">
+        <header className="sticky top-0 z-10 bg-background bg-white border-b shadow-sm dark:bg-black dark:border-b dark:border-gray-600">
           <div className="container mx-auto p-4">
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
               <h1 className="text-2xl sm:text-4xl font-bold">Task Management</h1>
-              <div className="flex space-x-2">
+              <div className="flex space-x-2 items-center">
                 <TaskFilter
                   onFilterChange={handleFilterChange}
                   activeFilters={activeFilters}
                   resetTrigger={resetTrigger}
                 />
                 <ManageLabelsButton />
-                <UpdateTaskButton onTaskCreated={handleTaskCreated} />
+                <CreateTaskButton onTaskCreated={handleTaskCreated} />
               </div>
             </div>
           </div>
@@ -86,11 +80,7 @@ export default function Home(): JSX.Element {
               <div className="bg-destructive/10 text-destructive rounded-lg p-6 max-w-md">
                 <h3 className="font-semibold mb-2">Error Loading Tasks</h3>
                 <p>{error.message}</p>
-                <Button
-                  onClick={handleRefresh}
-                  className="mt-4"
-                  disabled={isRefetching}
-                >
+                <Button onClick={handleRefresh} className="mt-4" disabled={isRefetching}>
                   {isRefetching ? 'Retrying...' : 'Retry'}
                 </Button>
               </div>
@@ -147,7 +137,7 @@ export default function Home(): JSX.Element {
                 href="https://github.com/integrityxd"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-primary transition-colors"
+                className="text-muted-foreground transition-colors"
                 aria-label="GitHub Profile"
               >
                 <svg
