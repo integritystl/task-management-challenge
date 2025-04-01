@@ -14,6 +14,7 @@ export default function NotFound(): JSX.Element {
     const redirectTimeout = setTimeout(() => {
       router.replace('/');
     }, 3000);
+
     return () => clearTimeout(redirectTimeout);
   }, [router]);
   return (
@@ -22,7 +23,7 @@ export default function NotFound(): JSX.Element {
         <h1 className="text-2xl font-bold mb-4 text-center">
           Whoops! This Page doesn&apos;t exist
         </h1>
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin" />
         <p className="mt-4 text-muted-foreground text-center">Taking you back home...</p>
       </div>
     </div>

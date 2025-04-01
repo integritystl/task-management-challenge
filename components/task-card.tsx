@@ -1,29 +1,10 @@
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardFooter,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Task, Label } from '@/lib/db';
-import {
-  Tag,
-  Check,
-  Star,
-  Flag,
-  Bookmark,
-  Heart,
-  Bell,
-  AlertCircle,
-  Trash2,
-  Edit,
-  Calendar,
-  Clock,
-} from 'lucide-react';
+import { Check, Flag, Bell, Trash2, Edit, Calendar, Clock } from 'lucide-react';
 import { JSX, memo } from 'react';
-import { TaskPriority, TaskStatus } from '@prisma/client';
+import { IconName, TaskPriority, TaskStatus } from '@/lib/db';
 import { Button } from '@/components/ui/button';
 import {
   AlertDialog,
@@ -36,8 +17,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { cn } from '@/lib/utils';
-import { IconName } from '@/types/label';
+import { cn } from '@/lib/utils/cn';
+import { Icon } from './ui/icon';
 
 const priorityColors = {
   [TaskPriority.LOW]: {
@@ -110,39 +91,9 @@ const getStatusIcon = (status: TaskStatus): JSX.Element => {
   }
 };
 /**
- * Helper function to render the appropriate icon component
- * @param iconName - Name of the icon to render
- * @param className - Optional CSS class name for styling
- * @returns JSX element with the appropriate icon
- */
-export const renderIcon = (iconName: IconName, className?: string): JSX.Element => {
-  switch (iconName) {
-    case 'tag':
-      return <Tag className={className} />;
-    case 'check':
-      return <Check className={className} />;
-    case 'star':
-      return <Star className={className} />;
-    case 'flag':
-      return <Flag className={className} />;
-    case 'bookmark':
-      return <Bookmark className={className} />;
-    case 'heart':
-      return <Heart className={className} />;
-    case 'bell':
-      return <Bell className={className} />;
-    case 'alertCircle':
-      return <AlertCircle className={className} />;
-    default:
-      return <Tag className={className} />;
-  }
-};
-/**
  * TaskLabel Component - Displays a single label with icon and name
  */
-const TaskLabel = ({ label }: {
-  label: Label;
-}): JSX.Element => {
+const TaskLabel = ({ label }: { label: Label }): JSX.Element => {
   return (
     <div
       className="flex items-center rounded-full px-2.5 py-1 text-white transition-all hover:scale-105 hover:shadow-sm"
@@ -150,8 +101,8 @@ const TaskLabel = ({ label }: {
       role="listitem"
       aria-label={`Label: ${label.name}`}
     >
-      {renderIcon(label.icon as IconName, 'h-3.5 w-3.5 mr-1.5')}
-      <span className="text-xs font-medium">{label.name}</span>
+      <Icon iconName={label.icon as IconName} className="h-3.5 w-3.5 mr-1.5" />
+      <span className="text-xs font-medium text-white">{label.name}</span>
     </div>
   );
 };
@@ -159,9 +110,9 @@ const TaskLabel = ({ label }: {
  * Props for the TaskCard component
  */
 interface TaskCardProps {
-  task: Task & { labels?: Label[]; };
+  task: Task & { labels?: Label[] };
   onDelete?: (taskId: string) => Promise<void>;
-  onEdit?: (task: Task & { labels?: Label[]; }) => void;
+  onEdit?: (task: Task & { labels?: Label[] }) => void;
 }
 /**
  * TaskCard Component - Displays a task with its details in a card format
@@ -169,25 +120,24 @@ interface TaskCardProps {
  * @returns JSX element with the task card
  */
 function TaskCardComponent({ task, onDelete, onEdit }: TaskCardProps): JSX.Element {
+  const priorityStyle = priorityColors[task.priority as keyof typeof priorityColors];
+  const statusStyle = statusColors[task.status as keyof typeof statusColors];
   const hasDueDate = !!task.dueDate;
   const hasLabels = task.labels && task.labels.length > 0;
-  // Convert to Date only if dueDate exists and is valid
   const dueDate = hasDueDate && task.dueDate ? new Date(task.dueDate) : null;
-  // Only check for overdue if we have a valid date
   const isOverdue =
     dueDate instanceof Date &&
     !isNaN(dueDate.getTime()) &&
     dueDate < new Date() &&
     task.status !== TaskStatus.DONE;
-  // Format date safely
   const formatDate = (date: Date | null): string => {
     if (date instanceof Date && !isNaN(date.getTime())) {
-      return format(date, 'PPP');
+      const localDate = new Date(date.getTime());
+      localDate.setMinutes(localDate.getMinutes() + localDate.getTimezoneOffset());
+      return format(localDate, 'PPP');
     }
     return 'Not set';
   };
-  const priorityStyle = priorityColors[task.priority as keyof typeof priorityColors];
-  const statusStyle = statusColors[task.status as keyof typeof statusColors];
   return (
     <Card className="group transition-all duration-300 hover:shadow-lg border border-slate-200 hover:border-slate-300 overflow-hidden">
       <div
@@ -205,7 +155,7 @@ function TaskCardComponent({ task, onDelete, onEdit }: TaskCardProps): JSX.Eleme
       <CardHeader className="pb-3 pt-4">
         <div className="flex justify-between items-start gap-4">
           <CardTitle className="text-xl font-semibold text-slate-800 dark:text-green-400 leading-tight">
-            {task.title}
+            <span className="text-slate-800 dark:text-green-400">{task.title}</span>
           </CardTitle>
           <Badge
             variant="outline"
@@ -232,8 +182,10 @@ function TaskCardComponent({ task, onDelete, onEdit }: TaskCardProps): JSX.Eleme
               aria-label={`Due date: ${formatDate(dueDate)}${isOverdue ? ', overdue' : ''}`}
             >
               <Calendar className="h-3.5 w-3.5 mr-1.5" />
-              <span>{formatDate(dueDate)}</span>
-              {isOverdue && <span className="ml-1.5 font-medium">(Overdue)</span>}
+              <span className={isOverdue ? 'text-rose-600' : 'text-slate-500 dark:text-green-200'}>
+                {formatDate(dueDate)}
+              </span>
+              {isOverdue && <span className="ml-1.5 font-medium text-rose-600">(Overdue)</span>}
             </span>
           </div>
         )}
@@ -244,7 +196,7 @@ function TaskCardComponent({ task, onDelete, onEdit }: TaskCardProps): JSX.Eleme
             {task.description}
           </p>
         ) : (
-            <p className="text-slate-400 italic mb-5">No description provided</p>
+          <p className="text-slate-400 italic mb-5">No description provided</p>
         )}
         <div className="flex flex-wrap items-center gap-2.5">
           <Badge
@@ -258,7 +210,7 @@ function TaskCardComponent({ task, onDelete, onEdit }: TaskCardProps): JSX.Eleme
             aria-label={`Status: ${task.status.replace('_', ' ')}`}
           >
             {getStatusIcon(task.status as TaskStatus)}
-            <span>{task.status.replace('_', ' ')}</span>
+            <span className={statusStyle.text}>{task.status.replace('_', ' ')}</span>
           </Badge>
           {hasLabels && (
             <div className="flex flex-wrap gap-2" role="list" aria-label="Task labels">
@@ -275,7 +227,7 @@ function TaskCardComponent({ task, onDelete, onEdit }: TaskCardProps): JSX.Eleme
             <Button
               variant="outline"
               size="sm"
-              className="rounded-full border-slate-200 text-slate-600 dark:text-green-200 dark:hover:text-blue-600 dark:hover:border-blue-200 dark:hover:bg-blue-50"
+              className="rounded-full border-slate-200 text-slate-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 dark:text-green-200 dark:hover:text-blue-600 dark:hover:border-blue-200 dark:hover:bg-blue-50 transition-colors duration-300"
               onClick={() => onEdit(task)}
             >
               <Edit className="h-3.5 w-3.5 mr-1.5" />
@@ -288,7 +240,7 @@ function TaskCardComponent({ task, onDelete, onEdit }: TaskCardProps): JSX.Eleme
                 <Button
                   variant="outline"
                   size="sm"
-                  className="rounded-full border-slate-200 text-slate-600 dark:text-green-200 dark:hover:text-rose-600 dark:hover:border-rose-200 dark:hover:bg-rose-50"
+                  className="rounded-full border-slate-200 text-slate-600 hover:text-rose-600 hover:border-rose-200 hover:bg-rose-50 dark:text-green-200 dark:hover:text-rose-600 dark:hover:border-rose-200 dark:hover:bg-rose-50 transition-colors duration-300"
                 >
                   <Trash2 className="h-3.5 w-3.5 mr-1.5" />
                   <span className="text-xs font-medium">Delete</span>
@@ -301,18 +253,19 @@ function TaskCardComponent({ task, onDelete, onEdit }: TaskCardProps): JSX.Eleme
                   </AlertDialogTitle>
                   <AlertDialogDescription className="text-slate-600 dark:text-green-200">
                     This action cannot be undone. This will permanently delete the task &quot;
-                    {task.title}&quot;.
+                    <span className="text-slate-600 dark:text-green-200">{task.title}</span>
+                    &quot;.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel className="rounded-full border-slate-200 text-slate-700 dark:text-green-200 dark:hover:bg-green-50 dark:hover:text-green-200">
-                    Cancel
+                    <span className="text-slate-700 dark:text-green-200">Cancel</span>
                   </AlertDialogCancel>
                   <AlertDialogAction
                     onClick={() => onDelete(task.id)}
                     className="rounded-full bg-rose-600 dark:bg-rose-600 dark:hover:bg-rose-700 text-white"
                   >
-                    Delete
+                    <span className="text-white">Delete</span>
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>

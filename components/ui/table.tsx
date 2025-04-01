@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/cn';
 
 const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(
   ({ className, ...props }, ref) => (
@@ -79,5 +79,4 @@ const TableCaption = React.forwardRef<
   <caption ref={ref} className={cn('mt-4 text-sm text-muted-foreground', className)} {...props} />
 ));
 TableCaption.displayName = 'TableCaption';
-
 export { Table, TableHeader, TableBody, TableFooter, TableHead, TableRow, TableCell, TableCaption };

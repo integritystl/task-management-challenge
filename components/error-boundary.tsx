@@ -9,12 +9,10 @@ interface ErrorBoundaryProps {
   children: ReactNode;
   fallback?: ReactNode;
 }
-
 interface ErrorBoundaryState {
   hasError: boolean;
   error: Error | null;
 }
-
 /**
  * ErrorBoundary component that catches JavaScript errors in its child component tree
  * and displays a fallback UI instead of the component tree that crashed
@@ -24,19 +22,19 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     super(props);
     this.state = {
       hasError: false,
-      error: null
+      error: null,
     };
   }
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return {
       hasError: true,
-      error
+      error,
     };
   }
   resetErrorBoundary = (): void => {
     this.setState({
       hasError: false,
-      error: null
+      error: null,
     });
   };
   render(): ReactNode {
@@ -53,10 +51,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
               {this.state.error?.message || 'An unexpected error occurred'}
             </AlertDescription>
             <div className="mt-4">
-              <Button
-                variant="outline"
-                onClick={this.resetErrorBoundary}
-              >
+              <Button variant="outline" onClick={this.resetErrorBoundary}>
                 Try again
               </Button>
             </div>

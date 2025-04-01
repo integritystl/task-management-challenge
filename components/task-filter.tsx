@@ -1,9 +1,9 @@
 import { useState, useEffect, JSX } from 'react';
 import { Check, Filter, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { TaskPriority, TaskStatus } from '@prisma/client';
-import { LabelData } from '@/types/label';
+import { Label, TaskPriority, TaskStatus } from '@/lib/db';
 import { useLabelsApi } from '@/hooks/use-labels-api';
+import { useLabelUpdates } from '@/hooks/use-label-updates';
 import { TaskFilterOptions } from '@/hooks/use-tasks-api';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
@@ -28,7 +28,6 @@ interface TaskFilterProps {
   activeFilters: TaskFilterOptions;
   resetTrigger?: number;
 }
-
 /**
  * TaskFilter component for filtering tasks in the navigation header
  * @param props - Component props
@@ -47,28 +46,27 @@ export function TaskFilter({
   const [selectedStatus, setSelectedStatus] = useState<TaskStatus | null>(
     activeFilters.status || null
   );
-  const [selectedLabels, setSelectedLabels] = useState<LabelData[]>([]);
+  const [selectedLabels, setSelectedLabels] = useState<Label[]>([]);
   const [sortBy, setSortBy] = useState<string>(activeFilters.sortBy || 'dueDate');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(activeFilters.sortOrder || 'asc');
-
-  // Load labels on component mount
   useEffect(() => {
     fetchLabels().catch(console.error);
   }, [fetchLabels]);
-
-  // Set selected labels based on active filters
+  useLabelUpdates(() => {
+    fetchLabels().catch(console.error);
+  });
   useEffect(() => {
     if (activeFilters.labelIds && activeFilters.labelIds.length > 0 && labels.length > 0) {
-      const filteredLabels = labels.filter(
-        label => label.id && activeFilters.labelIds?.includes(label.id)
-      );
+      const filteredLabels = labels.filter(label => activeFilters.labelIds?.includes(label.id));
       setSelectedLabels(filteredLabels);
     } else {
       setSelectedLabels([]);
     }
-  }, [activeFilters.labelIds, labels]);
-
-  // Reset filter values when resetTrigger changes
+    setSelectedPriority(activeFilters.priority || null);
+    setSelectedStatus(activeFilters.status || null);
+    setSortBy(activeFilters.sortBy || 'dueDate');
+    setSortOrder(activeFilters.sortOrder || 'asc');
+  }, [activeFilters, labels]);
   useEffect(() => {
     if (resetTrigger > 0) {
       setSelectedPriority(null);
@@ -78,35 +76,27 @@ export function TaskFilter({
       setSortOrder('asc');
     }
   }, [resetTrigger]);
-
-  // Apply filters when any filter value changes
   const applyFilters = (): void => {
     const newFilters: TaskFilterOptions = {
       priority: selectedPriority,
       status: selectedStatus,
-      labelIds: selectedLabels.map(label => label.id).filter(Boolean) as string[],
+      labelIds: selectedLabels.map(label => label.id),
       sortBy,
       sortOrder,
     };
-
     onFilterChange(newFilters);
     setIsOpen(false);
   };
-
-  // Clear all filters
   const clearFilters = (): void => {
     setSelectedPriority(null);
     setSelectedStatus(null);
     setSelectedLabels([]);
     setSortBy('dueDate');
     setSortOrder('asc');
-
     onFilterChange({});
     setIsOpen(false);
   };
-
-  // Toggle label selection
-  const toggleLabel = (label: LabelData): void => {
+  const toggleLabel = (label: Label): void => {
     setSelectedLabels(prev => {
       const isSelected = prev.some(l => l.id === label.id);
       if (isSelected) {
@@ -116,11 +106,12 @@ export function TaskFilter({
       }
     });
   };
-
-  // Count active filters
   const activeFilterCount =
-    (selectedPriority ? 1 : 0) + (selectedStatus ? 1 : 0) + selectedLabels.length;
-
+    (selectedPriority ? 1 : 0) +
+    (selectedStatus ? 1 : 0) +
+    selectedLabels.length +
+    (sortBy !== 'dueDate' ? 1 : 0) +
+    (sortOrder !== 'asc' ? 1 : 0);
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
@@ -241,11 +232,17 @@ export function TaskFilter({
             </CommandGroup>
           </CommandList>
           <div className="flex items-center justify-between p-3 border-t">
-            <Button variant="ghost" size="sm" onClick={clearFilters} className="text-xs h-8">
-              <X className="h-3 w-3 mr-1" />
-              Clear
-            </Button>
-            <Button size="sm" onClick={applyFilters} className="text-xs h-8">
+            {activeFilterCount > 0 && (
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="text-xs h-8">
+                <X className="h-3 w-3 mr-1" />
+                Clear
+              </Button>
+            )}
+            <Button
+              size="sm"
+              onClick={applyFilters}
+              className={`text-xs h-8 ${activeFilterCount === 0 ? 'ml-auto' : ''}`}
+            >
               Apply Filters
             </Button>
           </div>

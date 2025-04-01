@@ -1,27 +1,30 @@
 generator client {
   provider = "prisma-client-js"
 }
-
 datasource db {
   provider = "sqlite"
   url      = "file:./dev.db"
 }
-
-/// Enum for task priority levels
 enum TaskPriority {
   LOW
   MEDIUM
   HIGH
 }
-
-/// Enum for task status options
 enum TaskStatus {
   TODO
   IN_PROGRESS
   DONE
 }
-
-/// Task model representing a single task in the system
+enum IconName {
+  tag
+  check
+  star
+  flag
+  bookmark
+  heart
+  bell
+  alertCircle
+}
 model Task {
   id          String       @id @default(cuid())
   title       String
@@ -32,20 +35,16 @@ model Task {
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   labels      Label[]      @relation("TaskToLabel")
-
   @@index([status, priority])
   @@index([dueDate])
 }
-
-/// Label model for task categorization
 model Label {
   id        String   @id @default(cuid())
   name      String   @unique
   color     String
-  icon      String
+  icon      IconName @default(tag)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   tasks     Task[]   @relation("TaskToLabel")
-
   @@index([name])
 }

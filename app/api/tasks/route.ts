@@ -1,24 +1,30 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
-import { z } from 'zod';
-import { TaskPriority, TaskStatus, Prisma } from '@prisma/client';
-import { LabelSchema } from '@/types/label';
-
+import { prisma, TaskPriority, TaskStatus, Prisma } from '@/lib/db';
+import { TaskSchema } from '@/lib/schemas/task';
+import { TaskOperationError, TaskErrorType } from '@/lib/utils/TaskOperationError';
 
 /**
- * Zod schema for task creation validation
+ * Handles TaskOperationError instances and returns appropriate NextResponse.
+ * @param error The TaskOperationError instance.
+ * @returns A NextResponse object.
  */
-const CreateTaskSchema = z.object({
-  title: z.string().min(1, 'Title is required'),
-  description: z.string().optional(),
-  priority: z.nativeEnum(TaskPriority).default(TaskPriority.MEDIUM),
-  status: z.nativeEnum(TaskStatus).default(TaskStatus.TODO),
-  dueDate: z
-    .string()
-    .optional()
-    .refine(val => !val || !isNaN(new Date(val).getTime()), { message: 'Invalid date format' }),
-  labels: z.array(LabelSchema).optional(),
-});
+const handleTaskErrorResponse = (error: TaskOperationError): NextResponse => {
+  console.error(`Task Operation Error: ${error.type} - ${error.message}`, error.cause);
+  switch (error.type) {
+    case TaskErrorType.VALIDATION_ERROR:
+      return NextResponse.json(
+        { error: 'Validation failed', details: error.cause },
+        { status: 400 }
+      );
+    case TaskErrorType.NOT_FOUND:
+      return NextResponse.json({ error: error.message }, { status: 404 });
+    case TaskErrorType.DATABASE_ERROR:
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    case TaskErrorType.UNKNOWN_ERROR:
+    default:
+      return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
+  }
+};
 /**
  * Creates a new task
  * @param request The incoming request object
@@ -27,71 +33,83 @@ const CreateTaskSchema = z.object({
 export async function POST(request: Request): Promise<NextResponse> {
   try {
     const data = await request.json();
-    const validationResult = CreateTaskSchema.safeParse(data);
+    const validationResult = TaskSchema.safeParse(data);
     if (!validationResult.success) {
-      return NextResponse.json(
-        {
-          error: 'Validation failed',
-          details: validationResult.error.format(),
-        },
-        { status: 400 }
+      throw new TaskOperationError(
+        TaskErrorType.VALIDATION_ERROR,
+        'Task data validation failed.',
+        validationResult.error.format() as unknown as Error
       );
     }
     const validData = validationResult.data;
     const dueDate = validData.dueDate ? new Date(validData.dueDate) : null;
-    const task = await prisma.task.create({
-      data: {
-        title: validData.title,
-        description: validData.description,
-        priority: validData.priority,
-        status: validData.status,
-        dueDate: dueDate,
-      },
-    });
-    if (validData.labels && validData.labels.length > 0) {
-      for (const labelData of validData.labels) {
-        let labelId: string;
-        const existingLabel = await prisma.label.findFirst({
-          where: {
-            name: labelData.name,
-          },
-        });
-        if (existingLabel) {
-          labelId = existingLabel.id;
-        } else {
-          const newLabel = await prisma.label.create({
+    const taskWithLabels = await prisma.$transaction(async tx => {
+      const task = await tx.task.create({
+        data: {
+          title: validData.title,
+          description: validData.description,
+          priority: validData.priority,
+          status: validData.status,
+          dueDate: dueDate,
+        },
+      });
+      if (validData.labels && validData.labels.length > 0) {
+        for (const labelData of validData.labels) {
+          let label = await tx.label.findUnique({
+            where: { name: labelData.name },
+          });
+          if (!label) {
+            label = await tx.label.create({
+              data: {
+                name: labelData.name,
+                color: labelData.color,
+                icon: labelData.icon,
+              },
+            });
+          }
+          await tx.task.update({
+            where: { id: task.id },
             data: {
-              name: labelData.name,
-              color: labelData.color,
-              icon: labelData.icon,
+              labels: {
+                connect: { id: label.id },
+              },
             },
           });
-
-          labelId = newLabel.id;
         }
-        await prisma.task.update({
-          where: { id: task.id },
-          data: {
-            labels: {
-              connect: { id: labelId },
-            },
-          },
-        });
       }
-    }
-    const taskWithLabels = await prisma.task.findUnique({
-      where: { id: task.id },
-      include: { labels: true },
+      const finalTask = await tx.task.findUnique({
+        where: { id: task.id },
+        include: { labels: true },
+      });
+      if (!finalTask) {
+        throw new TaskOperationError(
+          TaskErrorType.DATABASE_ERROR,
+          'Failed to retrieve task immediately after creation.'
+        );
+      }
+      return finalTask;
     });
-    if (!taskWithLabels) {
-      throw new Error('Failed to retrieve task with labels');
-    }
-    return NextResponse.json(taskWithLabels);
+    return NextResponse.json(taskWithLabels, { status: 201 });
   } catch (error) {
-    console.error('Error creating task:', error);
-    return NextResponse.json(
-      { error: 'Failed to create task', message: (error as Error).message },
-      { status: 500 }
+    if (error instanceof TaskOperationError) {
+      return handleTaskErrorResponse(error);
+    }
+    console.error('Unhandled error creating task:', error);
+    let message = 'Failed to create task due to an unexpected error.';
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      message = `Database error creating task: ${error.code}`;
+      return handleTaskErrorResponse(
+        new TaskOperationError(TaskErrorType.DATABASE_ERROR, message, error)
+      );
+    } else if (error instanceof Error) {
+      message = error.message;
+    }
+    return handleTaskErrorResponse(
+      new TaskOperationError(
+        TaskErrorType.UNKNOWN_ERROR,
+        message,
+        error instanceof Error ? error : undefined
+      )
     );
   }
 }
@@ -143,10 +161,25 @@ export async function GET(request: Request): Promise<NextResponse> {
     });
     return NextResponse.json(tasks);
   } catch (error) {
+    if (error instanceof TaskOperationError) {
+      return handleTaskErrorResponse(error);
+    }
     console.error('Error fetching tasks:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch tasks', message: (error as Error).message },
-      { status: 500 }
+    let message = 'Failed to fetch tasks due to an unexpected error.';
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      message = `Database error fetching tasks: ${error.code}`;
+      return handleTaskErrorResponse(
+        new TaskOperationError(TaskErrorType.DATABASE_ERROR, message, error)
+      );
+    } else if (error instanceof Error) {
+      message = error.message;
+    }
+    return handleTaskErrorResponse(
+      new TaskOperationError(
+        TaskErrorType.UNKNOWN_ERROR,
+        message,
+        error instanceof Error ? error : undefined
+      )
     );
   }
 }

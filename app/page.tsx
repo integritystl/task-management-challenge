@@ -1,29 +1,40 @@
 'use client';
 
 import { useState, useEffect, useCallback, JSX } from 'react';
-import { CreateTaskButton } from '@/components/update-task-button';
+import { useRouter } from 'next/navigation';
 import { ManageLabelsButton } from '@/components/manage-labels-button';
 import { TaskFilter } from '@/components/task-filter';
 import { ErrorBoundary } from '@/components/error-boundary';
-import Link from 'next/link';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Button } from '@/components/ui/button';
-import { useTasksApi, TaskFilterOptions } from '@/hooks/use-tasks-api';
-import { TaskList } from '@/components/task-list';
+import { useTasksApi, TaskFilterOptions, filtersToSearchParams } from '@/hooks/use-tasks-api';
+import { Task } from '@/lib/db';
+import { UpdateTaskButton } from '@/components/update-task-button';
 import { Badge } from '@/components/ui/badge';
 import { X } from 'lucide-react';
+import { TaskList } from '@/components/task-list';
+import Link from 'next/link';
+import { useLabelUpdates } from '@/hooks/use-label-updates';
 
 /**
  * Home component that displays the task management dashboard
  * @returns {JSX.Element} The rendered Home component
  */
 export default function Home(): JSX.Element {
-  const { tasks, isLoading, activeFilters, resetTrigger, fetchTasks, clearFilters } = useTasksApi();
+  const {
+    tasks,
+    activeFilters,
+    resetTrigger,
+    fetchTasks,
+    updateTask,
+    deleteTask,
+    clearFilters,
+    isInitialized,
+    isLoading,
+  } = useTasksApi();
+  const router = useRouter();
   const [error, setError] = useState<Error | null>(null);
   const [isRefetching, setIsRefetching] = useState<boolean>(false);
-  const hasActiveFilters =
-    !!activeFilters.priority ||
-    !!activeFilters.status ||
-    (activeFilters.labelIds && activeFilters.labelIds.length > 0);
   const loadTasks = useCallback(async (): Promise<void> => {
     setError(null);
     try {
@@ -35,6 +46,9 @@ export default function Home(): JSX.Element {
   useEffect(() => {
     void loadTasks();
   }, [loadTasks]);
+  useLabelUpdates(() => {
+    void loadTasks();
+  });
   const handleRefresh = async (): Promise<void> => {
     setIsRefetching(true);
     try {
@@ -45,14 +59,32 @@ export default function Home(): JSX.Element {
       setIsRefetching(false);
     }
   };
-  const handleTaskCreated = (): void => {
-    loadTasks();
+  const handleTaskCreated = async (): Promise<void> => {
+    await fetchTasks(activeFilters);
   };
+  const handleTaskUpdated = (updatedTask: Task): void => {
+    updateTask(updatedTask);
+  };
+  const handleTaskDeleted = (taskId: string): void => {
+    deleteTask(taskId);
+  };
+  useEffect(() => {
+    if (isInitialized) {
+      const params = filtersToSearchParams(activeFilters);
+      const queryString = params.toString();
+      const url = queryString ? `?${queryString}` : '';
+      router.push(url, { scroll: false });
+    }
+  }, [activeFilters, isInitialized, router]);
   const handleFilterChange = (filters: TaskFilterOptions): void => {
     fetchTasks(filters).catch(err => {
       setError(err instanceof Error ? err : new Error('An error occurred while filtering tasks'));
     });
   };
+  const hasActiveFilters =
+    !!activeFilters.priority ||
+    !!activeFilters.status ||
+    (activeFilters.labelIds && activeFilters.labelIds.length > 0);
   return (
     <ErrorBoundary>
       <div className="flex flex-col min-h-screen">
@@ -67,7 +99,12 @@ export default function Home(): JSX.Element {
                   resetTrigger={resetTrigger}
                 />
                 <ManageLabelsButton />
-                <CreateTaskButton onTaskCreated={handleTaskCreated} />
+                <UpdateTaskButton
+                  onTaskChange={(task, isNew) =>
+                    isNew ? handleTaskCreated() : handleTaskUpdated(task)
+                  }
+                />
+                <ThemeToggle />
               </div>
             </div>
           </div>
@@ -83,45 +120,57 @@ export default function Home(): JSX.Element {
                 </Button>
               </div>
             </div>
-          ) : isLoading || isRefetching ? (
-            <TaskListSkeleton />
           ) : (
             <>
-              {hasActiveFilters && (
-                <div className="mb-4 flex flex-wrap gap-2 items-center">
-                  <span className="text-sm font-medium">Active filters:</span>
-                  {activeFilters.priority && (
-                    <Badge variant="secondary" className="flex items-center gap-1">
-                      Priority: {activeFilters.priority}
-                    </Badge>
+              {isLoading || !tasks ? (
+                <TaskListSkeleton />
+              ) : (
+                <>
+                  {hasActiveFilters && (
+                    <div className="mb-4 flex flex-wrap gap-2 items-center">
+                      <span className="text-sm font-medium">Active filters:</span>
+                      {activeFilters.priority && (
+                        <Badge variant="secondary" className="flex items-center gap-1">
+                          Priority: {activeFilters.priority}
+                        </Badge>
+                      )}
+                      {activeFilters.status && (
+                        <Badge variant="secondary" className="flex items-center gap-1">
+                          Status: {activeFilters.status.replace('_', ' ')}
+                        </Badge>
+                      )}
+                      {activeFilters.labelIds && activeFilters.labelIds.length > 0 && (
+                        <Badge variant="secondary" className="flex items-center gap-1">
+                          Labels: {activeFilters.labelIds.length}
+                        </Badge>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 px-2 text-xs"
+                        onClick={clearFilters}
+                      >
+                        <X className="h-3 w-3 mr-1" />
+                        Clear all
+                      </Button>
+                    </div>
                   )}
-                  {activeFilters.status && (
-                    <Badge variant="secondary" className="flex items-center gap-1">
-                      Status: {activeFilters.status.replace('_', ' ')}
-                    </Badge>
-                  )}
-                  {activeFilters.labelIds && activeFilters.labelIds.length > 0 && (
-                    <Badge variant="secondary" className="flex items-center gap-1">
-                      Labels: {activeFilters.labelIds.length}
-                    </Badge>
-                  )}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 px-2 text-xs"
-                    onClick={clearFilters}
-                  >
-                    <X className="h-3 w-3 mr-1" />
-                    Clear all
-                  </Button>
-                </div>
+                  <TaskList
+                    tasks={tasks}
+                    hasActiveFilters={hasActiveFilters}
+                    onClearFilters={clearFilters}
+                    onTaskChange={event => {
+                      if (event.type === 'updated') {
+                        handleTaskUpdated(event.task);
+                      } else if (event.type === 'deleted') {
+                        handleTaskDeleted(event.taskId);
+                      } else if (event.type === 'created') {
+                        handleTaskCreated();
+                      }
+                    }}
+                  />
+                </>
               )}
-              <TaskList
-                initialTasks={tasks}
-                onTaskCreated={handleTaskCreated}
-                hasActiveFilters={hasActiveFilters}
-                onClearFilters={clearFilters}
-              />
             </>
           )}
         </main>
@@ -129,11 +178,11 @@ export default function Home(): JSX.Element {
           <div className="container mx-auto px-4">
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
               <div className="text-sm text-muted-foreground">
-                © {new Date().getFullYear()}{' '}
+                {new Date().getFullYear()}{' '}
                 <Link
                   href="https://integrityxd.com"
                   target="_blank"
-                  className="hover:underline text-primary"
+                  className="hover:underline hover:text-orange-500 transition-colors duration-300"
                 >
                   IntegrityXD
                 </Link>
@@ -143,7 +192,7 @@ export default function Home(): JSX.Element {
                 href="https://github.com/integrityxd"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-muted-foreground transition-colors"
+                className="text-muted-foreground transition-colors hover:text-orange-500 duration-300"
                 aria-label="GitHub Profile"
               >
                 <svg
@@ -198,7 +247,6 @@ function TaskListSkeleton(): JSX.Element {
       </div>
     </div>
   ));
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">{skeletonCards}</div>
   );

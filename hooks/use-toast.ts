@@ -27,23 +27,23 @@ type Action =
   | {
       type: ActionType['ADD_TOAST'];
       toast: ToasterToast;
-    toastId?: never;
+      toastId?: never;
     }
   | {
       type: ActionType['UPDATE_TOAST'];
       toast: Partial<ToasterToast>;
-    toastId?: never;
+      toastId?: never;
     }
   | {
       type: ActionType['DISMISS_TOAST'];
       toastId?: ToasterToast['id'];
-    toast?: never;
+      toast?: never;
     }
   | {
       type: ActionType['REMOVE_TOAST'];
       toastId?: ToasterToast['id'];
-    toast?: never;
-  };
+      toast?: never;
+    };
 interface State {
   toasts: ToasterToast[];
 }
@@ -61,7 +61,6 @@ const addToRemoveQueue = (toastId: string) => {
   }, TOAST_REMOVE_DELAY);
   toastTimeouts.set(toastId, timeout);
 };
-
 export const reducer = (state: State, action: Action): State => {
   switch (action.type) {
     case 'ADD_TOAST':
@@ -74,7 +73,6 @@ export const reducer = (state: State, action: Action): State => {
         ...state,
         toasts: state.toasts.map(t => (t.id === action.toast.id ? { ...t, ...action.toast } : t)),
       };
-
     case 'DISMISS_TOAST': {
       const { toastId } = action;
       // ! Side effects ! - This could be extracted into a dismissToast() action,
@@ -110,7 +108,6 @@ export const reducer = (state: State, action: Action): State => {
         toasts: state.toasts.filter(t => t.id !== action.toastId),
       };
   }
-  return state;
 };
 const listeners: Array<(state: State) => void> = [];
 let memoryState: State = { toasts: [] };

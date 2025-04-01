@@ -1,9 +1,9 @@
 'use client';
 
-import { JSX, useEffect, useState } from 'react';
+import { JSX, useState } from 'react';
 import { TaskCard } from './task-card';
-import { Task } from '@/lib/db';
-import { PlusCircle, X } from 'lucide-react';
+import { Task, Label } from '@/lib/db';
+import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -12,16 +12,23 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { CreateTaskButton } from './update-task-button';
+import { UpdateTaskButton } from './update-task-button';
 
+/**
+ * Task change event type
+ */
+type TaskChangeEvent =
+  | { type: 'updated'; task: Task & { labels?: Label[] } }
+  | { type: 'deleted'; taskId: string }
+  | { type: 'created'; task: Task & { labels?: Label[] } };
 /**
  * Props for the TaskList component
  */
 interface TaskListProps {
-  initialTasks: Task[];
-  onTaskCreated?: (task: Task) => void;
+  tasks: Task[] | null;
   hasActiveFilters?: boolean;
   onClearFilters?: () => void;
+  onTaskChange?: (event: TaskChangeEvent) => void;
 }
 /**
  * TaskList Component - Displays a list of tasks and provides a way to create new tasks
@@ -29,53 +36,45 @@ interface TaskListProps {
  * @returns JSX element with the task list
  */
 export function TaskList({
-  initialTasks,
-  onTaskCreated,
+  tasks,
   hasActiveFilters = false,
   onClearFilters,
+  onTaskChange,
 }: TaskListProps): JSX.Element {
-  const [tasks, setTasks] = useState<Task[]>(initialTasks);
-  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
-  const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  useEffect(() => {
-    // Update tasks immediately to prevent state mismatch
-    setTasks(initialTasks);
-    // Use a short timeout to ensure loading state is properly handled
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [initialTasks]);
-  /**
-   * Handle task creation
-   * @param newTask - The newly created task
-   */
-  const handleTaskCreated = (newTask: Task): void => {
-    setTasks(prevTasks => [...prevTasks, newTask]);
-    setIsDialogOpen(false);
-    if (onTaskCreated) {
-      onTaskCreated(newTask);
-    }
-  };
-
-  /**
-   * Handle task edit button click
-   * @param task - The task to edit
-   */
-  const handleEditTask = (task: Task): void => {
-    setEditingTask(task);
+  const [editingTask, setEditingTask] = useState<(Task & { labels?: Label[] }) | null>(null);
+  const handleOpenEditDialog = (taskToEdit: Task & { labels?: Label[] }): void => {
+    setEditingTask(taskToEdit);
     setIsEditDialogOpen(true);
   };
   /**
-   * Handle task update
-   * @param updatedTask - The updated task
+   * Handle task update success
+   * @param updatedTask - The updated task object
    */
-  const handleTaskUpdated = (updatedTask: Task): void => {
-    setTasks(prevTasks => prevTasks.map(task => (task.id === updatedTask.id ? updatedTask : task)));
+  const handleTaskUpdated = (updatedTask: Task & { labels?: Label[] }): void => {
     setIsEditDialogOpen(false);
     setEditingTask(null);
+    if (onTaskChange) {
+      onTaskChange({ type: 'updated', task: updatedTask });
+    }
+  };
+  /**
+   * Handle task creation success
+   * @param createdTask - The newly created task object
+   */
+  const handleTaskCreated = (createdTask: Task & { labels?: Label[] }): void => {
+    if (onTaskChange) {
+      onTaskChange({ type: 'created', task: createdTask });
+    }
+  };
+  /**
+   * Handle closing the edit dialog
+   */
+  const handleEditDialogClose = (open: boolean): void => {
+    if (!open) {
+      setEditingTask(null);
+    }
+    setIsEditDialogOpen(open);
   };
   /**
    * Handle task deletion
@@ -89,109 +88,63 @@ export function TaskList({
       if (!response.ok) {
         throw new Error('Failed to delete task');
       }
-      setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
+      if (onTaskChange) {
+        onTaskChange({ type: 'deleted', taskId });
+      }
     } catch (error) {
-      console.error('Error deleting task:', error);
+      throw new Error(error instanceof Error ? error.message : 'Failed to delete task');
     }
   };
+  const noTasksAvailable = tasks !== null && tasks.length === 0;
   return (
     <>
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[600px] bg-white dark:bg-black">
-          <DialogHeader>
-            <DialogTitle>Create New Task</DialogTitle>
-            <DialogDescription>Fill out the form below to create a new task.</DialogDescription>
-          </DialogHeader>
-          <CreateTaskButton onTaskCreated={handleTaskCreated} />
-        </DialogContent>
-      </Dialog>
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+      <Dialog open={isEditDialogOpen} onOpenChange={handleEditDialogClose}>
         <DialogContent className="sm:max-w-[600px] bg-white dark:bg-black">
           <DialogHeader>
             <DialogTitle>Edit Task</DialogTitle>
-            <DialogDescription>Update the details for this task.</DialogDescription>
+            <DialogDescription>Update the task details below.</DialogDescription>
           </DialogHeader>
-          {editingTask && <CreateTaskButton task={editingTask} onTaskUpdated={handleTaskUpdated} />}
+          {editingTask && (
+            <UpdateTaskButton task={editingTask} onTaskChange={task => handleTaskUpdated(task)} />
+          )}
         </DialogContent>
       </Dialog>
-      {isLoading ? (
-        <TaskListSkeleton />
-      ) : tasks.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {tasks.map(task => (
-              <TaskCard
-                key={task.id}
-                task={task}
-                onEdit={handleEditTask}
-                onDelete={handleDeleteTask}
-              />
-            ))}
+      <div className="">
+        {noTasksAvailable ? (
+          <div className="text-center py-10 px-4 sm:px-6 lg:px-8">
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-white sm:text-3xl">
+              {hasActiveFilters ? 'No Tasks Match Your Filters' : 'No Tasks Yet!'}
+            </h2>
+            <p className="mt-3 text-gray-600 dark:text-gray-400">
+              {hasActiveFilters
+                ? 'Try adjusting or clearing your filters.'
+                : 'Get started by creating your first task.'}
+            </p>
+            <div className="mt-5 flex flex-col justify-center items-center gap-2 sm:flex-row sm:gap-3">
+              {hasActiveFilters && onClearFilters && (
+                <Button onClick={onClearFilters} variant="secondary">
+                  <X className="h-4 w-4 mr-2" />
+                  Clear Filters
+                </Button>
+              )}
+              <UpdateTaskButton onTaskChange={task => handleTaskCreated(task)} />
+            </div>
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-              <div className="bg-gray-200 rounded-lg p-8 w-full max-w-md mx-auto shadow-sm">
-              {hasActiveFilters ? (
-                <>
-                  <h3 className="text-xl mb-4 font-semibold">No Tasks Match Your Filters</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Try adjusting your filter criteria or clear all filters to see more tasks.
-                  </p>
-                  {onClearFilters && (
-                      <Button onClick={onClearFilters} variant="outline" className="mb-2 w-full">
-                      <X className="mr-2 h-4 w-4" />
-                      Clear All Filters
-                    </Button>
-                  )}
-                </>
-              ) : (
-                <>
-                      <h3 className="text-xl mb-4 font-semibold">No Tasks Have Been Created</h3>
-                      <Button
-                        onClick={() => setIsDialogOpen(true)}
-                        className="inline-flex items-center justify-center"
-                      >
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Create Task
-                      </Button>
-                </>
-              )}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {tasks
+              ? tasks.map(task => (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    onEdit={() => handleOpenEditDialog(task)}
+                    onDelete={() => handleDeleteTask(task.id)}
+                  />
+                ))
+              : null}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </>
-  );
-}
-/**
- * Skeleton loader for the task list
- * @returns JSX element with skeleton UI for loading state
- */
-export function TaskListSkeleton(): JSX.Element {
-  // Create an array of 6 skeleton cards
-  const skeletonCards = Array.from({ length: 6 }, (_, index) => (
-    <div
-      key={index}
-      className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 animate-pulse"
-    >
-      <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-4"></div>
-      <div className="space-y-2 mb-4">
-        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
-        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6"></div>
-        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-4/6"></div>
-      </div>
-      <div className="flex justify-between mb-4">
-        <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
-        <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
-      </div>
-      <div className="flex flex-wrap gap-2 mb-4">
-        <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded-full w-16"></div>
-        <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded-full w-20"></div>
-      </div>
-      <div className="flex justify-end mt-4">
-        <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
-      </div>
-    </div>
-  ));
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">{skeletonCards}</div>
   );
 }

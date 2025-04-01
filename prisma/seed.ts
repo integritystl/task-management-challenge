@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { PrismaClient, TaskPriority, TaskStatus } = require('@prisma/client');
 
 /**
@@ -10,68 +11,64 @@ const prisma = new PrismaClient();
  */
 async function main(): Promise<void> {
   try {
-    // Step 1: Delete all existing tasks and labels
     console.log('Deleting all existing tasks and labels...');
     await prisma.task.deleteMany({});
     await prisma.label.deleteMany({});
     console.log('All tasks and labels deleted successfully.');
-    // Step 2: Create labels
     console.log('Creating labels...');
     const labels = [
       {
         name: 'Finance',
         color: '#ef4444', // red
-        icon: 'tag'
+        icon: 'tag',
       },
       {
         name: 'Team',
         color: '#f97316', // orange
-        icon: 'heart'
+        icon: 'heart',
       },
       {
         name: 'Documentation',
         color: '#f59e0b', // amber
-        icon: 'bookmark'
+        icon: 'bookmark',
       },
       {
         name: 'Client',
         color: '#10b981', // emerald
-        icon: 'star'
+        icon: 'star',
       },
       {
         name: 'Admin',
         color: '#06b6d4', // cyan
-        icon: 'check'
+        icon: 'check',
       },
       {
         name: 'Development',
         color: '#3b82f6', // blue
-        icon: 'flag'
+        icon: 'flag',
       },
       {
         name: 'Research',
         color: '#8b5cf6', // violet
-        icon: 'bell'
+        icon: 'bell',
       },
       {
         name: 'Planning',
         color: '#d946ef', // fuchsia
-        icon: 'alertCircle'
-      }
+        icon: 'alertCircle',
+      },
     ];
-    // Create labels in database and store their IDs
+    console.log('Creating labels...');
     const labelMap = new Map();
     for (const label of labels) {
       const createdLabel = await prisma.label.create({
-        data: label
+        data: label,
       });
       labelMap.set(label.name, createdLabel.id);
     }
     console.log(`Created ${labels.length} labels successfully.`);
-    // Step 3: Create new tasks with various due dates
     console.log('Creating new tasks...');
     const today = new Date();
-    // Tasks with due dates before today
     const pastTasks = [
       {
         title: 'Complete quarterly financial report',
@@ -95,7 +92,6 @@ async function main(): Promise<void> {
         dueDate: new Date('2025-03-25'),
       },
     ];
-    // Tasks with due date on today
     const todayTasks = [
       {
         title: 'Prepare for client presentation',
@@ -119,7 +115,6 @@ async function main(): Promise<void> {
         dueDate: new Date(today),
       },
     ];
-    // Tasks with due dates after today
     const futureTasks = [
       {
         title: 'Implement new authentication system',
@@ -133,14 +128,14 @@ async function main(): Promise<void> {
         description: 'Schedule and conduct interviews with key users for the new dashboard feature',
         priority: TaskPriority.MEDIUM,
         status: TaskStatus.TODO,
-        dueDate: new Date('2025-04-20'),
+        dueDate: new Date('2025-03-31'),
       },
       {
         title: 'Prepare monthly newsletter',
         description: 'Draft and design the April company newsletter',
         priority: TaskPriority.LOW,
         status: TaskStatus.TODO,
-        dueDate: new Date('2025-04-08'),
+        dueDate: new Date('2025-04-01'),
       },
       {
         title: 'Migrate database to new server',
@@ -192,7 +187,6 @@ async function main(): Promise<void> {
         dueDate: new Date('2025-04-03'),
       },
     ];
-    // Tasks with no due date
     const noDueDateTasks = [
       {
         title: 'Research AI integration possibilities',
@@ -209,7 +203,6 @@ async function main(): Promise<void> {
         dueDate: null,
       },
     ];
-    // Associate labels with tasks
     const taskLabels: Record<string, string[]> = {
       'Complete quarterly financial report': ['Finance', 'Documentation'],
       'Schedule team building event': ['Team', 'Planning'],
@@ -228,11 +221,9 @@ async function main(): Promise<void> {
       'Create onboarding documentation': ['Documentation', 'Team'],
       'Implement accessibility improvements': ['Development', 'Client'],
       'Set up continuous deployment pipeline': ['Development', 'Planning'],
-      'Plan Q2 roadmap': ['Planning', 'Team', 'Client']
+      'Plan Q2 roadmap': ['Planning', 'Team', 'Client'],
     };
-    // Combine all tasks
     const allTasks = [...pastTasks, ...todayTasks, ...futureTasks, ...noDueDateTasks];
-    // Create tasks in database with labels
     for (const task of allTasks) {
       const labels: string[] = taskLabels[task.title] || [];
       const labelIds = labels.map((labelName: string) => ({ id: labelMap.get(labelName) }));
@@ -240,8 +231,8 @@ async function main(): Promise<void> {
         data: {
           ...task,
           labels: {
-            connect: labelIds
-          }
+            connect: labelIds,
+          },
         },
       });
     }
@@ -252,10 +243,9 @@ async function main(): Promise<void> {
     await prisma.$disconnect();
   }
 }
-// Run the seeding function
 main()
   .then(() => console.log('Database seeding completed successfully.'))
-  .catch((error) => {
+  .catch(error => {
     console.error('Failed to seed database:', error);
     process.exit(1);
   });

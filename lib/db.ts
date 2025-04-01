@@ -26,5 +26,8 @@ export const prisma =
 if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.prisma = prisma;
 }
-// Re-export Prisma
+
+// Re-export types from Prisma schema
+// export { TaskPriority, TaskStatus, IconName } from '@prisma/client';
+// export type { Prisma, Task, Label } from '@prisma/client';
 export * from '@prisma/client';

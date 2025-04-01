@@ -1,13 +1,13 @@
-import { Label } from '@/lib/db';
-import { LabelData } from '@/types/label';
 import { useState, useCallback } from 'react';
+import { type LabelData } from '../lib/schemas/label';
+import { type Label } from '@/lib/db';
 
 /**
  * Custom hook for managing label API operations
  * @returns Object containing labels data and API operations
  */
 export function useLabelsApi() {
-  const [labels, setLabels] = useState<LabelData[]>([]);
+  const [labels, setLabels] = useState<Label[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   /**
@@ -45,6 +45,7 @@ export function useLabelsApi() {
         },
         body: JSON.stringify(data),
       });
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to create label');
@@ -74,7 +75,6 @@ export function useLabelsApi() {
         },
         body: JSON.stringify(data),
       });
-
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to update label');
@@ -101,6 +101,7 @@ export function useLabelsApi() {
       const response = await fetch(`/api/labels?id=${id}`, {
         method: 'DELETE',
       });
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to delete label');

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getTaskById, updateTask, deleteTask } from '@/lib/task-operations';
+import { getTaskById, updateTask, deleteTask } from '@/lib/services/task';
+import { revalidatePath } from 'next/cache';
 
 /**
  * Handles GET request for a specific task by ID
@@ -9,11 +10,10 @@ import { getTaskById, updateTask, deleteTask } from '@/lib/task-operations';
  */
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ taskId: string; }>; }
+  { params }: { params: Promise<{ taskId: string }> }
 ): Promise<Response> {
   try {
     const { taskId } = await params;
-
     const task = await getTaskById(taskId);
     if (!task) {
       return NextResponse.json({ error: 'Task not found' }, { status: 404 });
@@ -35,7 +35,7 @@ export async function GET(
  */
 export async function PATCH(
   request: Request,
-  { params }: { params: Promise<{ taskId: string; }>; }
+  { params }: { params: Promise<{ taskId: string }> }
 ): Promise<Response> {
   try {
     const { taskId } = await params;
@@ -44,7 +44,7 @@ export async function PATCH(
     if (!updatedTask) {
       return NextResponse.json({ error: 'Task not found' }, { status: 404 });
     }
-
+    revalidatePath('/');
     return NextResponse.json(updatedTask);
   } catch (error) {
     console.error('Error updating task:', error);
@@ -62,7 +62,7 @@ export async function PATCH(
  */
 export async function DELETE(
   request: Request,
-  { params }: { params: Promise<{ taskId: string; }>; }
+  { params }: { params: Promise<{ taskId: string }> }
 ): Promise<Response> {
   try {
     const { taskId } = await params;
@@ -70,6 +70,7 @@ export async function DELETE(
     if (!success) {
       return NextResponse.json({ error: 'Task not found' }, { status: 404 });
     }
+    revalidatePath('/');
     return NextResponse.json({
       success: true,
       message: 'Task deleted successfully',

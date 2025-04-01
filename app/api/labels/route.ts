@@ -1,187 +1,63 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
-import { z } from 'zod';
-import { Label, Task } from '@prisma/client';
-import { LabelSchema } from '@/types/label';
+import {
+  getAllLabels,
+  createLabel,
+  updateLabel,
+  deleteLabel,
+  LabelErrorType,
+  LabelOperationError,
+} from '@/lib/services/label';
+import { Label } from '@/lib/db';
 
-/**
- * Error types for label operations
- */
-enum LabelErrorType {
-  VALIDATION_ERROR = 'VALIDATION_ERROR',
-  DUPLICATE_ERROR = 'DUPLICATE_ERROR',
-  NOT_FOUND_ERROR = 'NOT_FOUND_ERROR',
-  SERVER_ERROR = 'SERVER_ERROR',
-  PARAMETER_ERROR = 'PARAMETER_ERROR',
-}
-/**
- * Retrieves all labels
- * @returns List of labels or error response
- */
-export async function GET(): Promise<
-  NextResponse<Label[] | { error: string; message: string; type?: string; }>
-> {
-  try {
-    const labels = await prisma.label.findMany({
-      orderBy: {
-        name: 'asc',
-      },
-    });
-    return NextResponse.json(labels, { status: 200 });
-  } catch (error) {
-    console.error('Error fetching labels:', error);
-    return NextResponse.json(
-      {
-        error: 'Failed to fetch labels',
-        message: (error as Error).message,
-        type: LabelErrorType.SERVER_ERROR,
-      },
-      { status: 500 }
-    );
-  }
-}
-/**
- * Creates a new label
- * @param request The incoming request object
- * @returns The created label or error response
- */
-export async function POST(
-  request: Request
-): Promise<
-  NextResponse<
-    Label | { error: string; message: string; details?: Record<string, unknown>; type?: string; }
-  >
-> {
-  try {
-    const data = await request.json();
-    const validationResult = LabelSchema.safeParse(data);
-    if (!validationResult.success) {
-      return NextResponse.json(
-        {
-          error: 'Validation failed',
-          message: 'The provided label data is invalid',
-          details: validationResult.error.format(),
-          type: LabelErrorType.VALIDATION_ERROR,
-        },
-        { status: 400 }
-      );
-    }
-    const validData = validationResult.data;
-    const existingLabel = await prisma.label.findFirst({
-      where: {
-        name: validData.name,
-      },
-    }); 
-    if (existingLabel) {
-      return NextResponse.json(
-        {
-          error: 'Label already exists',
-          message: 'A label with this name already exists',
-          type: LabelErrorType.DUPLICATE_ERROR,
-        },
-        { status: 409 }
-      );
-    }
-    const label = await prisma.label.create({
-      data: {
-        name: validData.name,
-        color: validData.color,
-        icon: validData.icon,
-      },
-    });
-    return NextResponse.json(label, { status: 201 });
-  } catch (error) {
-    console.error('Error creating label:', error);
-    return NextResponse.json(
-      {
-        error: 'Failed to create label',
-        message: (error as Error).message,
-        type: LabelErrorType.SERVER_ERROR,
-      },
-      { status: 500 }
-    );
-  }
-}
-/**
- * Updates an existing label
- * @param request The incoming request object
- * @returns The updated label or error response
- */
-export async function PATCH(
-  request: Request
-): Promise<
-  NextResponse<
-    Label | { error: string; message: string; details?: Record<string, unknown>; type?: string; }
-  >
-> {
-  try {
-    const data = await request.json();
-    const UpdateLabelSchema = LabelSchema.extend({
-      id: z.string().min(1, 'Label ID is required'),
-    });
-
-    const validationResult = UpdateLabelSchema.safeParse(data);
-    if (!validationResult.success) {
-      return NextResponse.json(
-        {
-          error: 'Validation failed',
-          message: 'The provided label data is invalid',
-          details: validationResult.error.format(),
-          type: LabelErrorType.VALIDATION_ERROR,
-        },
-        { status: 400 }
-      );
-    }
-    const validData = validationResult.data;
-
-    const existingLabel = await prisma.label.findUnique({
-      where: {
-        id: validData.id,
-      },
-    });
-    if (!existingLabel) {
-      return NextResponse.json(
-        {
-          error: 'Label not found',
-          message: 'The label you are trying to update does not exist',
-          type: LabelErrorType.NOT_FOUND_ERROR,
-        },
-        { status: 404 }
-      );
-    }
-
-    if (validData.name !== existingLabel.name) {
-      const duplicateLabel = await prisma.label.findFirst({
-        where: {
-          name: validData.name,
-          id: { not: validData.id },
-        },
-      });
-      if (duplicateLabel) {
+function handleErrorResponse(error: unknown): NextResponse<object> {
+  if (error instanceof LabelOperationError) {
+    switch (error.type) {
+      case LabelErrorType.VALIDATION_ERROR:
         return NextResponse.json(
           {
-            error: 'Label name already exists',
-            message: 'Another label with this name already exists',
+            error: 'Validation Failed',
+            message: error.message,
+            details: error.details,
+            type: error.type,
+          },
+          { status: 400 }
+        );
+      case LabelErrorType.DUPLICATE_ERROR:
+        return NextResponse.json(
+          {
+            error: 'Conflict',
+            message: error.message,
+            type: error.type,
           },
           { status: 409 }
         );
-      }
+      case LabelErrorType.NOT_FOUND_ERROR:
+        return NextResponse.json(
+          {
+            error: 'Not Found',
+            message: error.message,
+            type: error.type,
+          },
+          { status: 404 }
+        );
+      case LabelErrorType.SERVER_ERROR:
+      default:
+        console.error('Label Service Server Error:', error);
+        return NextResponse.json(
+          {
+            error: 'Internal Server Error',
+            message: error.message || 'An unexpected error occurred',
+            type: LabelErrorType.SERVER_ERROR,
+          },
+          { status: 500 }
+        );
     }
-    const updatedLabel = await prisma.label.update({
-      where: { id: validData.id },
-      data: {
-        name: validData.name,
-        color: validData.color,
-        icon: validData.icon,
-      },
-    });
-    return NextResponse.json(updatedLabel, { status: 200 });
-  } catch (error) {
-    console.error('Error updating label:', error);
+  } else {
+    console.error('Unhandled API Error:', error);
     return NextResponse.json(
       {
-        error: 'Failed to update label',
-        message: (error as Error).message,
+        error: 'Internal Server Error',
+        message: 'An unexpected error occurred',
         type: LabelErrorType.SERVER_ERROR,
       },
       { status: 500 }
@@ -189,73 +65,73 @@ export async function PATCH(
   }
 }
 /**
- * Deletes a label
- * @param request The incoming request object
- * @returns Success message or error response
+ * Retrieves all labels using the label service.
+ * @returns List of labels or error response.
  */
-export async function DELETE(
-  request: Request
-): Promise<
-  NextResponse<
-    { success: boolean; message: string; } | { error: string; message: string; type?: string; }
-  >
-> {
+export async function GET(): Promise<NextResponse<Label[] | object>> {
   try {
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
+    const labels = await getAllLabels();
+    return NextResponse.json(labels, { status: 200 });
+  } catch (error) {
+    return handleErrorResponse(error);
+  }
+}
+/**
+ * Creates a new label using the label service.
+ * @param request The incoming request object.
+ * @returns The created label or error response.
+ */
+export async function POST(request: Request): Promise<NextResponse<Label | object>> {
+  try {
+    const data = await request.json();
+    const newLabel = await createLabel(data);
+    return NextResponse.json(newLabel, { status: 201 });
+  } catch (error) {
+    return handleErrorResponse(error);
+  }
+}
+/**
+ * Updates an existing label using the label service.
+ * @param request The incoming request object.
+ * @returns The updated label or error response.
+ */
+export async function PATCH(request: Request): Promise<NextResponse<Label | object>> {
+  try {
+    const data = await request.json();
+    const updatedLabel = await updateLabel(data);
+    return NextResponse.json(updatedLabel, { status: 200 });
+  } catch (error) {
+    return handleErrorResponse(error);
+  }
+}
+/**
+ * Deletes a label using the label service.
+ * @param request The incoming request object.
+ * @returns Success message or error response.
+ */
+export async function DELETE(request: Request): Promise<NextResponse<object>> {
+  try {
+    const url = new URL(request.url);
+    const id = url.searchParams.get('id');
     if (!id) {
       return NextResponse.json(
         {
-          error: 'Missing parameter',
+          error: 'Bad Request',
           message: 'Label ID is required',
-          type: LabelErrorType.PARAMETER_ERROR,
+          type: LabelErrorType.VALIDATION_ERROR,
         },
         { status: 400 }
       );
     }
-    const existingLabel = await prisma.label.findUnique({
-      where: { id },
-      include: { tasks: true },
-    });
-    if (!existingLabel) {
-      return NextResponse.json(
-        {
-          error: 'Label not found',
-          message: 'The label you are trying to delete does not exist',
-          type: LabelErrorType.NOT_FOUND_ERROR,
-        },
-        { status: 404 }
-      );
-    }
-    return await prisma.$transaction(async tx => {
-      await tx.label.update({
-        where: { id },
-        data: {
-          tasks: {
-            disconnect: existingLabel.tasks.map((task: Task) => ({ id: task.id })),
-          },
-        },
-      });
-      await tx.label.delete({
-        where: { id },
-      });
-      return NextResponse.json(
-        {
-          success: true,
-          message: 'Label deleted successfully',
-        },
-        { status: 200 }
-      );
-    });
-  } catch (error) {
-    console.error('Error deleting label:', error);
+    await deleteLabel({ id });
     return NextResponse.json(
       {
-        error: 'Failed to delete label',
-        message: (error as Error).message,
-        type: LabelErrorType.SERVER_ERROR,
+        success: true,
+        message: 'Label deleted successfully',
       },
-      { status: 500 }
+      { status: 200 }
     );
+  } catch (error) {
+    return handleErrorResponse(error);
   }
 }

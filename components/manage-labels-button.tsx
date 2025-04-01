@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo, JSX } from 'react';
+import { dispatchLabelUpdateEvent } from '@/hooks/use-label-updates';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
@@ -23,21 +24,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import {
-  Tag,
-  PlusCircle,
-  Check,
-  Star,
-  Flag,
-  Bookmark,
-  Heart,
-  Bell,
-  AlertCircle,
-  Loader2,
-  Pencil,
-  Trash2,
-  Tags,
-} from 'lucide-react';
+import { PlusCircle, Loader2, Pencil, Trash2, Tags } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -48,8 +35,10 @@ import {
 } from '@/components/ui/table';
 
 import { useLabelsApi } from '../hooks/use-labels-api';
-import { ICON_VALUES, IconName, LabelData, LabelSchema, PREDEFINED_COLORS } from '@/types/label';
-import { Label } from '@/lib/db';
+import { PREDEFINED_COLORS, ICON_VALUES } from '@/lib/const';
+import { LabelData, LabelSchema } from '@/lib/schemas/label';
+import { IconName } from '@/lib/db';
+import { Icon } from './ui/icon';
 
 /**
  * Props for the LabelFormDialog component
@@ -63,36 +52,6 @@ interface LabelFormDialogProps {
   isSubmitting: boolean;
   mode: 'create' | 'edit';
 }
-
-/**
- * Helper function to render the appropriate icon component
- * @param iconName - Name of the icon to render
- * @param className - Optional CSS class name for styling
- * @returns JSX element with the appropriate icon
- */
-const renderIcon = (iconName: IconName, className?: string): JSX.Element => {
-  switch (iconName) {
-    case 'tag':
-      return <Tag className={className} />;
-    case 'check':
-      return <Check className={className} />;
-    case 'star':
-      return <Star className={className} />;
-    case 'flag':
-      return <Flag className={className} />;
-    case 'bookmark':
-      return <Bookmark className={className} />;
-    case 'heart':
-      return <Heart className={className} />;
-    case 'bell':
-      return <Bell className={className} />;
-    case 'alertCircle':
-      return <AlertCircle className={className} />;
-    default:
-      return <Tag className={className} />;
-  }
-};
-
 /**
  * LabelFormDialog Component - Dialog for creating and editing labels
  */
@@ -122,10 +81,7 @@ const LabelFormDialog = ({
     },
     mode: 'onChange',
   });
-
   const currentLabel = watch();
-
-  // Reset form when dialog opens with initialData
   useEffect(() => {
     if (open && initialData) {
       reset(initialData);
@@ -137,8 +93,6 @@ const LabelFormDialog = ({
       });
     }
   }, [open, initialData, reset]);
-
-  // Handle dialog close
   const handleOpenChange = useCallback(
     (open: boolean) => {
       if (!open) {
@@ -148,15 +102,12 @@ const LabelFormDialog = ({
     },
     [onCancel, onOpenChange]
   );
-
-  // Handle form submission
   const handleFormSubmit = useCallback(
     (data: LabelData) => {
       onSubmit(data);
     },
     [onSubmit]
   );
-
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
@@ -185,7 +136,6 @@ const LabelFormDialog = ({
               </p>
             )}
           </div>
-
           <div>
             <LabelComponent htmlFor="labelIcon">Icon</LabelComponent>
             <Controller
@@ -199,7 +149,8 @@ const LabelFormDialog = ({
                   <SelectTrigger id="labelIcon">
                     <SelectValue placeholder="Select icon">
                       <div className="flex items-center">
-                        {renderIcon(currentLabel.icon, 'h-4 w-4 mr-2')} {currentLabel.icon}
+                        <Icon iconName={field.value} className="h-4 w-4 mr-2" />
+                        {field.value}
                       </div>
                     </SelectValue>
                   </SelectTrigger>
@@ -207,7 +158,8 @@ const LabelFormDialog = ({
                     {ICON_VALUES.map(icon => (
                       <SelectItem key={icon} value={icon}>
                         <div className="flex items-center">
-                          {renderIcon(icon, 'h-4 w-4 mr-2')} {icon}
+                          <Icon iconName={icon} className="h-4 w-4 mr-2" />
+                          {icon}
                         </div>
                       </SelectItem>
                     ))}
@@ -217,7 +169,6 @@ const LabelFormDialog = ({
             />
             {errors.icon && <p className="text-red-500 text-sm mt-1">{errors.icon.message}</p>}
           </div>
-
           <div>
             <LabelComponent htmlFor="labelColor">Color</LabelComponent>
             <div className="grid grid-cols-3 gap-2 mt-1">
@@ -243,21 +194,18 @@ const LabelFormDialog = ({
               {errors.color && <p className="text-red-500 text-sm mt-1">{errors.color.message}</p>}
             </div>
           </div>
-
-          {/* Label Preview */}
           <div className="mt-3">
-            <LabelComponent>Label</LabelComponent>
+            <LabelComponent>Label Preview</LabelComponent>
             <div className="flex items-center mt-1 p-2 border rounded-md">
               <div
                 className="flex items-center rounded-md px-2 py-1 text-white"
                 style={{ backgroundColor: currentLabel.color }}
               >
-                {renderIcon(currentLabel.icon, 'h-3 w-3 mr-1')}
+                <Icon iconName={currentLabel.icon} className="h-3 w-3 mr-1" />
                 <span className="text-xs">{currentLabel.name || 'Label Name'}</span>
               </div>
             </div>
           </div>
-
           <DialogFooter className="flex justify-end space-x-2 mt-4">
             <Button
               type="button"
@@ -285,7 +233,6 @@ const LabelFormDialog = ({
     </Dialog>
   );
 };
-
 /**
  * ManageLabelsButton Component - Button and dialog for managing labels
  * @returns JSX element with the manage labels button and dialog
@@ -298,7 +245,6 @@ export function ManageLabelsButton(): JSX.Element {
   const { toast } = useToast();
   const { labels, isLoading, isSubmitting, fetchLabels, createLabel, updateLabel, deleteLabel } =
     useLabelsApi();
-
   useEffect(() => {
     if (open) {
       fetchLabels();
@@ -330,6 +276,7 @@ export function ManageLabelsButton(): JSX.Element {
           description: 'The label has been successfully deleted.',
           variant: 'default',
         });
+        dispatchLabelUpdateEvent();
       } catch (error) {
         toast({
           title: 'Error',
@@ -359,6 +306,7 @@ export function ManageLabelsButton(): JSX.Element {
           });
         }
         setLabelFormOpen(false);
+        dispatchLabelUpdateEvent();
       } catch (error) {
         toast({
           title: 'Error',
@@ -417,7 +365,11 @@ export function ManageLabelsButton(): JSX.Element {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => label.id && handleDeleteLabel(label.id)}
+                      onClick={() => {
+                        if (label.id !== undefined) {
+                          handleDeleteLabel(label.id);
+                        }
+                      }}
                       disabled={isSubmitting}
                       className="text-red-500 hover:text-red-700"
                       aria-label={`Delete ${label.name}`}
@@ -430,7 +382,7 @@ export function ManageLabelsButton(): JSX.Element {
                 <div className="mt-2 grid grid-cols-2 gap-2 text-sm text-muted-foreground">
                   <div className="flex items-center gap-2">
                     <span>Icon:</span>
-                    {renderIcon(label.icon, 'h-4 w-4')}
+                    <Icon iconName={label.icon} className="h-4 w-4" />
                     <span className="capitalize">{label.icon}</span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -470,7 +422,9 @@ export function ManageLabelsButton(): JSX.Element {
                       {label.name}
                     </div>
                   </TableCell>
-                  <TableCell>{renderIcon(label.icon, 'h-4 w-4')}</TableCell>
+                  <TableCell>
+                    <Icon iconName={label.icon} className="h-4 w-4" />
+                  </TableCell>
                   <TableCell>
                     <div className="flex items-center">
                       <div
@@ -495,7 +449,11 @@ export function ManageLabelsButton(): JSX.Element {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => label.id && handleDeleteLabel(label.id)}
+                        onClick={() => {
+                          if (label.id !== undefined) {
+                            handleDeleteLabel(label.id);
+                          }
+                        }}
                         disabled={isSubmitting}
                         className="text-red-500 hover:text-red-700"
                         aria-label={`Delete ${label.name}`}

@@ -3,7 +3,6 @@
 import { useState, useCallback, JSX, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -25,89 +24,37 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import {
-  X,
-  PlusCircle,
-  Tag,
-  Check,
-  Star,
-  Flag,
-  Bookmark,
-  Heart,
-  Bell,
-  AlertCircle,
-  Loader2,
-  Save,
-} from 'lucide-react';
-import { TaskPriority, TaskStatus } from '@prisma/client';
-import { Task, Label } from '@/lib/db';
-import { IconName, LabelData, PREDEFINED_COLORS, LabelSchema, ICON_VALUES } from '@/types/label';
+import { X, PlusCircle, Loader2, Save } from 'lucide-react';
+import { Task, Label, TaskPriority, TaskStatus, IconName } from '@/lib/db';
+import { Icon } from './ui/icon';
+import { LabelData, LabelSchema } from '@/lib/schemas/label';
+import { TaskData, TaskSchema } from '@/lib/schemas/task';
+import { ICON_VALUES, PREDEFINED_COLORS } from '@/lib/const';
 
 /**
- * Task schema for form validation
+ * Props for the LabelsList component
  */
-const taskSchema = z.object({
-  title: z.string().min(1, 'Title is required'),
-  description: z.string().optional(),
-  priority: z.nativeEnum(TaskPriority).default(TaskPriority.MEDIUM),
-  status: z.nativeEnum(TaskStatus).default(TaskStatus.TODO),
-  dueDate: z
-    .string()
-    .optional()
-    .refine(val => !val || !isNaN(new Date(val).getTime()), { message: 'Invalid date format' }),
-  labels: z.array(LabelSchema).optional(),
-});
-interface TaskFormData {
-  title: string;
-  description?: string;
-  priority: TaskPriority;
-  status: TaskStatus;
-  dueDate?: string;
-  labels?: LabelData[];
-}
 interface LabelsListProps {
   labels: LabelData[];
   onRemove: (index: number) => void;
 }
+/**
+ * Props for the LabelDialog component
+ */
 interface LabelDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAddLabel: (label: LabelData) => void;
   onCancel: () => void;
 }
-interface CreateTaskButtonProps {
-  task?: Task & { labels?: Label[]; };
-  onTaskCreated?: (task: Task) => void;
-  onTaskUpdated?: (task: Task) => void;
-}
 /**
- * Helper function to render the appropriate icon component
- * @param iconName - Name of the icon to render
- * @param className - Optional CSS class name for styling
- * @returns JSX element with the appropriate icon
+ * Props for the CreateTaskButton component
  */
-const renderIcon = (iconName: IconName, className?: string): JSX.Element => {
-  switch (iconName) {
-    case 'tag':
-      return <Tag className={className} />;
-    case 'check':
-      return <Check className={className} />;
-    case 'star':
-      return <Star className={className} />;
-    case 'flag':
-      return <Flag className={className} />;
-    case 'bookmark':
-      return <Bookmark className={className} />;
-    case 'heart':
-      return <Heart className={className} />;
-    case 'bell':
-      return <Bell className={className} />;
-    case 'alertCircle':
-      return <AlertCircle className={className} />;
-    default:
-      return <Tag className={className} />;
-  }
-};
+interface CreateTaskButtonProps {
+  task?: Task & { labels?: Label[] };
+  onTaskChange?: (task: Task, isNew: boolean) => void;
+}
+
 /**
  * LabelsList Component - Displays a list of labels with remove functionality
  */
@@ -122,7 +69,7 @@ const LabelsList = ({ labels, onRemove }: LabelsListProps): JSX.Element | null =
           style={{ backgroundColor: label.color }}
           role="listitem"
         >
-          {renderIcon(label.icon, 'h-3 w-3 mr-1')}
+          <Icon iconName={label.icon} className="h-3 w-3 mr-1" />
           <span className="text-xs mr-1">{label.name}</span>
           <button
             type="button"
@@ -216,7 +163,8 @@ const LabelDialog = ({
                   <SelectTrigger id="labelIcon">
                     <SelectValue placeholder="Select icon">
                       <div className="flex items-center">
-                        {renderIcon(currentLabel.icon, 'h-4 w-4 mr-2')} {currentLabel.icon}
+                        <Icon iconName={currentLabel.icon} className="h-4 w-4 mr-2" />{' '}
+                        {currentLabel.icon}
                       </div>
                     </SelectValue>
                   </SelectTrigger>
@@ -224,7 +172,7 @@ const LabelDialog = ({
                     {ICON_VALUES.map(icon => (
                       <SelectItem key={icon} value={icon}>
                         <div className="flex items-center">
-                          {renderIcon(icon, 'h-4 w-4 mr-2')} {icon}
+                          <Icon iconName={icon} className="h-4 w-4 mr-2" /> {icon}
                         </div>
                       </SelectItem>
                     ))}
@@ -266,7 +214,7 @@ const LabelDialog = ({
                 className="flex items-center rounded-md px-2 py-1 text-white"
                 style={{ backgroundColor: currentLabel.color }}
               >
-                {renderIcon(currentLabel.icon, 'h-3 w-3 mr-1')}
+                <Icon iconName={currentLabel.icon} className="h-3 w-3 mr-1" />
                 <span className="text-xs">{currentLabel.name || 'Label Name'}</span>
               </div>
             </div>
@@ -294,11 +242,7 @@ const LabelDialog = ({
  * @param props - Component props
  * @returns JSX element with the create task button and dialog
  */
-export function CreateTaskButton({
-  task,
-  onTaskCreated,
-  onTaskUpdated,
-}: CreateTaskButtonProps): JSX.Element {
+export function UpdateTaskButton({ task, onTaskChange }: CreateTaskButtonProps): JSX.Element {
   const [open, setOpen] = useState<boolean>(false);
   const [labelDialogOpen, setLabelDialogOpen] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -342,32 +286,29 @@ export function CreateTaskButton({
     setValue,
     watch,
     formState: { errors, isDirty },
-  } = useForm<TaskFormData>({
-    resolver: zodResolver(taskSchema),
+  } = useForm<TaskData>({
+    resolver: zodResolver(TaskSchema),
     defaultValues: {
       title: task?.title || '',
       description: task?.description || '',
-      priority: (task?.priority as TaskPriority) || TaskPriority.MEDIUM,
-      status: (task?.status as TaskStatus) || TaskStatus.TODO,
+      priority: task?.priority || TaskPriority.MEDIUM,
+      status: task?.status || TaskStatus.TODO,
       dueDate: task?.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
       labels: task?.labels
         ? task.labels.map((label: Label) => ({
-          name: label.name,
-          color: label.color,
-          icon: label.icon as IconName,
-        }))
+            name: label.name,
+            color: label.color,
+            icon: label.icon as IconName,
+          }))
         : [],
     },
   });
   const labels = watch('labels') || [];
-  /**
-   * Add a new label to the form and update existingLabels if it's a new label
-   */
   const addLabel = useCallback(
     (newLabel: LabelData): void => {
       const currentLabels = [...(watch('labels') || [])];
       setValue('labels', [...currentLabels, newLabel], { shouldDirty: true });
-      const createLabelInDatabase = async () => {
+      const createNewLabel = async () => {
         try {
           const response = await fetch('/api/labels', {
             method: 'POST',
@@ -391,7 +332,7 @@ export function CreateTaskButton({
         }
       };
       if (labelDialogOpen) {
-        createLabelInDatabase();
+        createNewLabel();
       }
       setLabelDialogOpen(false);
     },
@@ -414,7 +355,10 @@ export function CreateTaskButton({
    */
   const handleDialogClose = useCallback(
     (open: boolean) => {
-      if (isDirty) {
+      if (open) {
+        // Labels are now fetched in useEffect
+      } else if (isDirty) {
+        // In a real app, you might want to show a confirmation dialog here
         if (confirm('You have unsaved changes. Are you sure you want to close?')) {
           reset();
           setOpen(false);
@@ -430,17 +374,17 @@ export function CreateTaskButton({
    * Submit handler for the form
    * @param data - Form data
    */
-  const onSubmit = async (data: TaskFormData): Promise<void> => {
+  const onSubmit = async (data: TaskData): Promise<void> => {
     setIsSubmitting(true);
     try {
       // Ensure dueDate is properly formatted as an ISO string if it exists
       const formattedData = {
         ...data,
         dueDate: data.dueDate ? new Date(data.dueDate).toISOString() : undefined,
-        // Always include labels array, even if empty, to ensure deleted labels are processed
         labels: data.labels || [],
       };
       if (isEditMode && task) {
+        // Update existing task
         const response = await fetch(`/api/tasks/${task.id}`, {
           method: 'PATCH',
           headers: {
@@ -453,8 +397,8 @@ export function CreateTaskButton({
           throw new Error(errorData.message || 'Failed to update task');
         }
         const updatedTask = await response.json();
-        if (onTaskUpdated) {
-          onTaskUpdated(updatedTask);
+        if (onTaskChange) {
+          onTaskChange(updatedTask, false);
         }
         toast({
           title: 'Task updated',
@@ -473,10 +417,9 @@ export function CreateTaskButton({
           const errorData = await response.json();
           throw new Error(errorData.message || 'Failed to create task');
         }
-
         const createdTask = await response.json();
-        if (onTaskCreated) {
-          onTaskCreated(createdTask);
+        if (onTaskChange) {
+          onTaskChange(createdTask, true);
         }
         toast({
           title: 'Task created',
@@ -497,6 +440,9 @@ export function CreateTaskButton({
       setIsSubmitting(false);
     }
   };
+  /**
+   * Handle cancel for label dialog
+   */
   const handleLabelCancel = useCallback(() => {
     setLabelDialogOpen(false);
   }, []);
@@ -658,7 +604,7 @@ export function CreateTaskButton({
                           No labels found
                         </div>
                       ) : (
-                            existingLabels.map(label => (
+                        existingLabels.map(label => (
                           <SelectItem key={label.id} value={label.id}>
                             <div className="flex items-center">
                               <div
@@ -666,7 +612,7 @@ export function CreateTaskButton({
                                 style={{ backgroundColor: label.color }}
                               ></div>
                               <span className="mr-1">{label.name}</span>
-                                  {renderIcon(label.icon as IconName, 'h-3 w-3 ml-1')}
+                              <Icon iconName={label.icon} className="h-3 w-3 ml-1" />
                             </div>
                           </SelectItem>
                         ))
@@ -676,13 +622,13 @@ export function CreateTaskButton({
                 </div>
                 <LabelsList labels={labels} onRemove={removeLabel} />
               </div>
-
               <Button type="submit" className="w-full" disabled={isSubmitting}>
-                {isEditMode ? (
-                  <Save className="mr-2 h-4 w-4" />
-                ) : (
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                )}
+                {!isSubmitting &&
+                  (isEditMode ? (
+                    <Save className="mr-2 h-4 w-4" />
+                  ) : (
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                  ))}
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -691,7 +637,7 @@ export function CreateTaskButton({
                 ) : isEditMode ? (
                   'Update Task'
                 ) : (
-                      'Create Task'
+                  'Create Task'
                 )}
               </Button>
             </form>
@@ -706,12 +652,12 @@ export function CreateTaskButton({
               {...register('title')}
               aria-required="true"
               aria-invalid={!!errors.title}
-                aria-describedby={errors.title ? 'titleError' : undefined}
+              aria-describedby={errors.title ? 'titleError' : undefined}
             />
             {errors.title && (
-                <p id="titleError" className="text-red-500 text-sm mt-1">
-                  {errors.title.message}
-                </p>
+              <p id="titleError" className="text-red-500 text-sm mt-1">
+                {errors.title.message}
+              </p>
             )}
           </div>
           <div>
@@ -767,7 +713,7 @@ export function CreateTaskButton({
                 </Select>
               )}
             />
-              {errors.status && <p className="text-red-500 text-sm mt-1">{errors.status.message}</p>}
+            {errors.status && <p className="text-red-500 text-sm mt-1">{errors.status.message}</p>}
           </div>
           <div>
             <LabelComponent htmlFor="dueDate">Due Date</LabelComponent>
@@ -776,12 +722,12 @@ export function CreateTaskButton({
               id="dueDate"
               {...register('dueDate')}
               aria-invalid={!!errors.dueDate}
-                aria-describedby={errors.dueDate ? 'dueDateError' : undefined}
+              aria-describedby={errors.dueDate ? 'dueDateError' : undefined}
             />
             {errors.dueDate && (
-                <p id="dueDateError" className="text-red-500 text-sm mt-1">
-                  {errors.dueDate.message}
-                </p>
+              <p id="dueDateError" className="text-red-500 text-sm mt-1">
+                {errors.dueDate.message}
+              </p>
             )}
           </div>
           <div className="space-y-2">
@@ -802,7 +748,7 @@ export function CreateTaskButton({
             </div>
             <div className="mb-2">
               <Select
-                  onValueChange={value => {
+                onValueChange={value => {
                   const selectedLabel = existingLabels.find(label => label.id === value);
                   if (selectedLabel) {
                     const isLabelAlreadyAdded = labels.some(
@@ -839,7 +785,7 @@ export function CreateTaskButton({
                       No labels found
                     </div>
                   ) : (
-                          existingLabels.map(label => (
+                    existingLabels.map(label => (
                       <SelectItem key={label.id} value={label.id}>
                         <div className="flex items-center">
                           <div
@@ -847,7 +793,7 @@ export function CreateTaskButton({
                             style={{ backgroundColor: label.color }}
                           ></div>
                           <span className="mr-1">{label.name}</span>
-                                {renderIcon(label.icon as IconName, 'h-3 w-3 ml-1')}
+                          <Icon iconName={label.icon} className="h-3 w-3 ml-1" />
                         </div>
                       </SelectItem>
                     ))
@@ -857,12 +803,13 @@ export function CreateTaskButton({
             </div>
             <LabelsList labels={labels} onRemove={removeLabel} />
           </div>
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isEditMode ? (
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {!isSubmitting &&
+              (isEditMode ? (
                 <Save className="mr-2 h-4 w-4" />
               ) : (
                 <PlusCircle className="mr-2 h-4 w-4" />
-              )}
+              ))}
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
