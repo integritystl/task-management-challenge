@@ -1,22 +1,36 @@
 import './globals.css';
-import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import type { Metadata, Viewport } from 'next';
+import { Fira_Code } from 'next/font/google';
+import { Toaster } from '@/components/ui/toaster';
+import { ThemeProvider } from '@/components/theme-provider';
 
-const inter = Inter({ subsets: ['latin'] });
-
+const firaCode = Fira_Code({ subsets: ['latin'], display: 'swap' });
 export const metadata: Metadata = {
   title: 'Task Management Challenge',
   description: 'A task management challenge for javascript developers at IntegrityXD',
+  keywords: ['task management', 'productivity', 'todo list', 'organization'],
+  authors: [{ name: 'IntegrityXD' }],
+  creator: 'IntegrityXD',
 };
-
-export default function RootLayout({
-  children,
-}: {
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: '#ffffff',
+};
+interface RootLayoutProps {
   children: React.ReactNode;
-}) {
+}
+export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="en">
-      <body className={inter.className}>{children}</body>
+    <html lang="en" suppressHydrationWarning>
+      <body className={firaCode.className}>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <div className="min-h-screen flex flex-col bg-background text-foreground">
+            <main className="flex-grow">{children}</main>
+          </div>
+          <Toaster />
+        </ThemeProvider>
+      </body>
     </html>
   );
 }
