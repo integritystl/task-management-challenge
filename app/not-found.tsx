@@ -19,7 +19,9 @@ export default function NotFound(): JSX.Element {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen">
       <div className="flex flex-col items-center justify-center w-full py-12">
-        <h1 className="text-2xl font-bold mb-4 text-center">Whoops! This Page doesn't exist</h1>
+        <h1 className="text-2xl font-bold mb-4 text-center">
+          Whoops! This Page doesn&apos;t exist
+        </h1>
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
         <p className="mt-4 text-muted-foreground text-center">Taking you back home...</p>
       </div>

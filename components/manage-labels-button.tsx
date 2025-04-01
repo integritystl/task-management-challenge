@@ -276,7 +276,7 @@ const LabelFormDialog = ({
               ) : mode === 'create' ? (
                 'Create'
               ) : (
-                    'Update'
+                'Update'
               )}
             </Button>
           </DialogFooter>
@@ -296,32 +296,24 @@ export function ManageLabelsButton(): JSX.Element {
   const [currentLabel, setCurrentLabel] = useState<LabelData | undefined>(undefined);
   const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
   const { toast } = useToast();
-
   const { labels, isLoading, isSubmitting, fetchLabels, createLabel, updateLabel, deleteLabel } =
     useLabelsApi();
 
-  // Fetch labels when dialog opens
   useEffect(() => {
     if (open) {
       fetchLabels();
     }
   }, [open, fetchLabels]);
-
-  // Handle creating a new label
   const handleCreateLabel = useCallback(() => {
     setCurrentLabel(undefined);
     setFormMode('create');
     setLabelFormOpen(true);
   }, []);
-
-  // Handle editing a label
-  const handleEditLabel = useCallback((label: Label) => {
+  const handleEditLabel = useCallback((label: LabelData) => {
     setCurrentLabel(label);
     setFormMode('edit');
     setLabelFormOpen(true);
   }, []);
-
-  // Handle deleting a label
   const handleDeleteLabel = useCallback(
     async (id: string) => {
       if (
@@ -331,7 +323,6 @@ export function ManageLabelsButton(): JSX.Element {
       ) {
         return;
       }
-
       try {
         await deleteLabel(id);
         toast({
@@ -349,8 +340,6 @@ export function ManageLabelsButton(): JSX.Element {
     },
     [deleteLabel, toast]
   );
-
-  // Handle submitting the label form
   const handleLabelSubmit = useCallback(
     async (data: LabelData) => {
       try {
@@ -369,8 +358,6 @@ export function ManageLabelsButton(): JSX.Element {
             variant: 'default',
           });
         }
-
-        // Close the form dialog
         setLabelFormOpen(false);
       } catch (error) {
         toast({
@@ -382,13 +369,9 @@ export function ManageLabelsButton(): JSX.Element {
     },
     [formMode, createLabel, updateLabel, toast]
   );
-
-  // Handle cancel for label form
   const handleLabelFormCancel = useCallback(() => {
     setLabelFormOpen(false);
   }, []);
-
-  // Memoize the label table to prevent unnecessary re-renders
   const labelTable = useMemo(() => {
     if (isLoading) {
       return (
@@ -397,7 +380,6 @@ export function ManageLabelsButton(): JSX.Element {
         </div>
       );
     }
-
     if (labels.length === 0) {
       return (
         <div className="text-center p-8 border rounded-md">
@@ -407,10 +389,8 @@ export function ManageLabelsButton(): JSX.Element {
         </div>
       );
     }
-
     return (
       <>
-        {/* Mobile view */}
         <div className="md:hidden w-full overflow-hidden">
           <div className="grid gap-4">
             {labels.map(label => (
@@ -423,7 +403,6 @@ export function ManageLabelsButton(): JSX.Element {
                     ></div>
                     <div className="font-medium">{label.name}</div>
                   </div>
-
                   <div className="flex space-x-2">
                     <Button
                       variant="outline"
@@ -438,7 +417,7 @@ export function ManageLabelsButton(): JSX.Element {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleDeleteLabel(label.id)}
+                      onClick={() => label.id && handleDeleteLabel(label.id)}
                       disabled={isSubmitting}
                       className="text-red-500 hover:text-red-700"
                       aria-label={`Delete ${label.name}`}
@@ -448,7 +427,6 @@ export function ManageLabelsButton(): JSX.Element {
                     </Button>
                   </div>
                 </div>
-
                 <div className="mt-2 grid grid-cols-2 gap-2 text-sm text-muted-foreground">
                   <div className="flex items-center gap-2">
                     <span>Icon:</span>
@@ -470,8 +448,6 @@ export function ManageLabelsButton(): JSX.Element {
             ))}
           </div>
         </div>
-
-        {/* Tablet and desktop view */}
         <div className="hidden md:block overflow-auto">
           <Table>
             <TableHeader>
@@ -519,7 +495,7 @@ export function ManageLabelsButton(): JSX.Element {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleDeleteLabel(label.id)}
+                        onClick={() => label.id && handleDeleteLabel(label.id)}
                         disabled={isSubmitting}
                         className="text-red-500 hover:text-red-700"
                         aria-label={`Delete ${label.name}`}
@@ -537,7 +513,6 @@ export function ManageLabelsButton(): JSX.Element {
       </>
     );
   }, [labels, isLoading, isSubmitting, handleEditLabel, handleDeleteLabel]);
-
   return (
     <>
       <Dialog open={open} onOpenChange={setOpen}>
@@ -552,19 +527,15 @@ export function ManageLabelsButton(): JSX.Element {
             <DialogTitle>Manage Labels</DialogTitle>
             <DialogDescription>Create, edit, and delete labels for your tasks.</DialogDescription>
           </DialogHeader>
-
           <div className="flex justify-end mb-4">
             <Button onClick={handleCreateLabel} aria-label="Create new label">
               <PlusCircle className="mr-2 h-4 w-4" />
               Create Label
             </Button>
           </div>
-
           {labelTable}
         </DialogContent>
       </Dialog>
-
-      {/* Label Form Dialog */}
       <LabelFormDialog
         open={labelFormOpen}
         onOpenChange={setLabelFormOpen}

@@ -14,6 +14,7 @@
     "config:db": "prisma generate && prisma db push && prisma db seed",
     "seed": "npx ts-node prisma/seed.ts",
     "postinstall": "npm run config:db",
+    "prepare": "husky",
     "kill-ports": "for port in $(seq 3000 3010); do pid=$(lsof -i :$port -t); if [ ! -z \"$pid\" ]; then echo \"Killing process $pid on port $port\" && kill -9 $pid; fi; done"
   },
   "prisma": {

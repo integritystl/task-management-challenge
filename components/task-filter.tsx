@@ -2,7 +2,7 @@ import { useState, useEffect, JSX } from 'react';
 import { Check, Filter, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TaskPriority, TaskStatus } from '@prisma/client';
-import { Label } from '@/types/label';
+import { LabelData } from '@/types/label';
 import { useLabelsApi } from '@/hooks/use-labels-api';
 import { TaskFilterOptions } from '@/hooks/use-tasks-api';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -47,7 +47,7 @@ export function TaskFilter({
   const [selectedStatus, setSelectedStatus] = useState<TaskStatus | null>(
     activeFilters.status || null
   );
-  const [selectedLabels, setSelectedLabels] = useState<Label[]>([]);
+  const [selectedLabels, setSelectedLabels] = useState<LabelData[]>([]);
   const [sortBy, setSortBy] = useState<string>(activeFilters.sortBy || 'dueDate');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(activeFilters.sortOrder || 'asc');
 
@@ -59,7 +59,9 @@ export function TaskFilter({
   // Set selected labels based on active filters
   useEffect(() => {
     if (activeFilters.labelIds && activeFilters.labelIds.length > 0 && labels.length > 0) {
-      const filteredLabels = labels.filter(label => activeFilters.labelIds?.includes(label.id));
+      const filteredLabels = labels.filter(
+        label => label.id && activeFilters.labelIds?.includes(label.id)
+      );
       setSelectedLabels(filteredLabels);
     } else {
       setSelectedLabels([]);
@@ -82,7 +84,7 @@ export function TaskFilter({
     const newFilters: TaskFilterOptions = {
       priority: selectedPriority,
       status: selectedStatus,
-      labelIds: selectedLabels.map(label => label.id),
+      labelIds: selectedLabels.map(label => label.id).filter(Boolean) as string[],
       sortBy,
       sortOrder,
     };
@@ -104,7 +106,7 @@ export function TaskFilter({
   };
 
   // Toggle label selection
-  const toggleLabel = (label: Label): void => {
+  const toggleLabel = (label: LabelData): void => {
     setSelectedLabels(prev => {
       const isSelected = prev.some(l => l.id === label.id);
       if (isSelected) {

@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, JSX } from 'react';
 import { CreateTaskButton } from '@/components/update-task-button';
 import { ManageLabelsButton } from '@/components/manage-labels-button';
 import { TaskFilter } from '@/components/task-filter';
-import { TasksContainer } from '@/components/tasks-container';
 import { ErrorBoundary } from '@/components/error-boundary';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -21,11 +20,10 @@ export default function Home(): JSX.Element {
   const { tasks, isLoading, activeFilters, resetTrigger, fetchTasks, clearFilters } = useTasksApi();
   const [error, setError] = useState<Error | null>(null);
   const [isRefetching, setIsRefetching] = useState<boolean>(false);
-  const hasActiveFilters = (
+  const hasActiveFilters =
     !!activeFilters.priority ||
     !!activeFilters.status ||
-    (activeFilters.labelIds && activeFilters.labelIds.length > 0)
-  );
+    (activeFilters.labelIds && activeFilters.labelIds.length > 0);
   const loadTasks = useCallback(async (): Promise<void> => {
     setError(null);
     try {
@@ -46,7 +44,7 @@ export default function Home(): JSX.Element {
     } finally {
       setIsRefetching(false);
     }
-  }
+  };
   const handleTaskCreated = (): void => {
     loadTasks();
   };
@@ -86,52 +84,60 @@ export default function Home(): JSX.Element {
               </div>
             </div>
           ) : isLoading || isRefetching ? (
-              <TaskListSkeleton />
-            ) : (
-                <>
-                  {hasActiveFilters && (
-                    <div className="mb-4 flex flex-wrap gap-2 items-center">
-                      <span className="text-sm font-medium">Active filters:</span>
-                      {activeFilters.priority && (
-                        <Badge variant="secondary" className="flex items-center gap-1">
-                          Priority: {activeFilters.priority}
-                        </Badge>
-                      )}
-                      {activeFilters.status && (
-                        <Badge variant="secondary" className="flex items-center gap-1">
-                          Status: {activeFilters.status.replace('_', ' ')}
-                        </Badge>
-                      )}
-                      {activeFilters.labelIds && activeFilters.labelIds.length > 0 && (
-                        <Badge variant="secondary" className="flex items-center gap-1">
-                          Labels: {activeFilters.labelIds.length}
-                        </Badge>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 px-2 text-xs"
-                        onClick={clearFilters}
-                      >
-                        <X className="h-3 w-3 mr-1" />
-                        Clear all
-                      </Button>
-                    </div>
+            <TaskListSkeleton />
+          ) : (
+            <>
+              {hasActiveFilters && (
+                <div className="mb-4 flex flex-wrap gap-2 items-center">
+                  <span className="text-sm font-medium">Active filters:</span>
+                  {activeFilters.priority && (
+                    <Badge variant="secondary" className="flex items-center gap-1">
+                      Priority: {activeFilters.priority}
+                    </Badge>
                   )}
-                  <TaskList
-                    initialTasks={tasks}
-                    onTaskCreated={handleTaskCreated}
-                    hasActiveFilters={hasActiveFilters}
-                    onClearFilters={clearFilters}
-                  />
-                </>
+                  {activeFilters.status && (
+                    <Badge variant="secondary" className="flex items-center gap-1">
+                      Status: {activeFilters.status.replace('_', ' ')}
+                    </Badge>
+                  )}
+                  {activeFilters.labelIds && activeFilters.labelIds.length > 0 && (
+                    <Badge variant="secondary" className="flex items-center gap-1">
+                      Labels: {activeFilters.labelIds.length}
+                    </Badge>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-xs"
+                    onClick={clearFilters}
+                  >
+                    <X className="h-3 w-3 mr-1" />
+                    Clear all
+                  </Button>
+                </div>
+              )}
+              <TaskList
+                initialTasks={tasks}
+                onTaskCreated={handleTaskCreated}
+                hasActiveFilters={hasActiveFilters}
+                onClearFilters={clearFilters}
+              />
+            </>
           )}
         </main>
         <footer className="bg-background border-t py-6">
           <div className="container mx-auto px-4">
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
               <div className="text-sm text-muted-foreground">
-                © {new Date().getFullYear()} <Link href="https://integrityxd.com" target="_blank" className="hover:underline text-primary">IntegrityXD</Link>. All rights reserved.
+                © {new Date().getFullYear()}{' '}
+                <Link
+                  href="https://integrityxd.com"
+                  target="_blank"
+                  className="hover:underline text-primary"
+                >
+                  IntegrityXD
+                </Link>
+                . All rights reserved.
               </div>
               <Link
                 href="https://github.com/integrityxd"

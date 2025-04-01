@@ -7,7 +7,7 @@ import { useState, useCallback } from 'react';
  * @returns Object containing labels data and API operations
  */
 export function useLabelsApi() {
-  const [labels, setLabels] = useState<Label[]>([]);
+  const [labels, setLabels] = useState<LabelData[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   /**
@@ -81,9 +81,7 @@ export function useLabelsApi() {
       }
       const updatedLabel = await response.json();
       setLabels(prevLabels =>
-        prevLabels.map(label =>
-          label.id === updatedLabel.id ? updatedLabel : label
-        )
+        prevLabels.map(label => (label.id === updatedLabel.id ? updatedLabel : label))
       );
       return updatedLabel;
     } catch (error) {
