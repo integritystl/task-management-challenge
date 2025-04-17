@@ -49,12 +49,16 @@ export function CreateTaskButton() {
 
   const onSubmit = async (data: TaskFormData) => {
     try {
+      const formattedData = {
+        ...data,
+        dueDate: data.dueDate? new Date(data.dueDate).toISOString(): null
+      }
       const response = await fetch('/api/tasks', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(formattedData),
       });
 
       if (!response.ok) {
@@ -120,7 +124,7 @@ export function CreateTaskButton() {
           </div>
           <div>
             <Label htmlFor="dueDate">Due Date</Label>
-            <Input type="date" id="dueDate" {...register('dueDate')} />
+            <Input type="date" id="dueDate" {...register('dueDate')}   min={new Date().toISOString().split('T')[0]} />
           </div>
           <Button type="submit" className="w-full">
             Create Task

@@ -5,14 +5,20 @@ import { prisma } from '@/lib/db';
 export async function POST(request: Request) {
   try {
     const data = await request.json();
-    
+    const dueDate = data.dueDate ? new Date(data.dueDate) : null;
+    if (data.dueDate && isNaN(dueDate!.getTime())) {
+      return NextResponse.json(
+        { error: 'Invalid due date format' },
+        { status: 400 }
+      );
+    }
     const task = await prisma.task.create({
       data: {
         title: data.title,
         description: data.description,
         priority: data.priority,
         status: data.status,
-        dueDate: data.dueDate ? new Date(data.dueDate) : null,
+        dueDate: dueDate,
       },
     });
 
