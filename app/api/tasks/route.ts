@@ -103,12 +103,32 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams} = new URL(request.url)
+    const labelNames = searchParams.getAll('label');
     const tasks = await prisma.task.findMany({
+      where: labelNames.length > 0 ? {
+        labels: {
+          some: {
+            label: {
+              name: {
+                in: labelNames
+              }
+            }
+          }
+        }
+      } : undefined,
       orderBy: {
         dueDate: 'asc',
       },
+      include: {
+        labels: {
+          include: {
+            label: true
+          }
+        }
+      }
     });
     return NextResponse.json(tasks);
   } catch (error) {
