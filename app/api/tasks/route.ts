@@ -15,24 +15,16 @@ const CreateTaskSchema = z.object({
   description: z.string().optional(),
   priority: z.string()
     .refine(val => ['LOW', 'MEDIUM', 'HIGH'].includes(val), 'Invalid priority value')
-    .default('MEDIUM'),
+    .default('MEDIUM').optional(),
   status: z.string()
     .refine(val => ['TODO', 'IN_PROGRESS', 'DONE'].includes(val), 'Invalid status value')
-    .default('TODO'),
+    .default('TODO').optional(),
   dueDate: z.string().optional().refine(val => !val || !isNaN(new Date(val).getTime())), 
   labels: z.array(LabelSchema).optional()
 })
 export async function POST(request: Request) {
   try {
-    const json = await request.json();
-    const validation = CreateTaskSchema.safeParse(json);
-    if (!validation.success) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: validation.error.errors },
-        { status: 400 }
-      );
-    }
-    const { data } = validation
+    const data = await request.json();
     const dueDate = data.dueDate ? new Date(data.dueDate) : null;
     if (data.dueDate && isNaN(dueDate!.getTime())) {
       return NextResponse.json(
