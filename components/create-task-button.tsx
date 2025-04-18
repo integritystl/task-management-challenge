@@ -141,14 +141,10 @@ export function CreateTaskButton() {
               <p className="text-red-500 text-sm">{errors.title.message}</p>
             )}
           </div>
-
-
           <div>
             <Label htmlFor="description">Description</Label>
             <Input id="description" {...register('description')} />
           </div>
-
-
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="priority">Priority</Label>
