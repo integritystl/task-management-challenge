@@ -51,7 +51,13 @@ export function CreateTaskButton() {
     try {
       const formattedData = {
         ...data,
-        dueDate: data.dueDate? new Date(data.dueDate).toISOString(): null
+        dueDate: data.dueDate
+        ? (() => {
+            const date = new Date(data.dueDate);
+            date.setUTCHours(12, 0, 0, 0); 
+            return date.toISOString();
+          })()
+        : null,
       }
       const response = await fetch('/api/tasks', {
         method: 'POST',
