@@ -16,4 +16,25 @@ model Task {
   dueDate     DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  labels      TaskLabel[]     
+}
+
+model Label {
+  id          String     @id @default(cuid())
+  name        String
+  color       String     @default("#3b82f6") // Default blue color
+  tasks       TaskLabel[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@unique([name, color])
+}
+
+model TaskLabel {
+  task     Task   @relation(fields: [taskId], references: [id])
+  taskId   String
+  label    Label  @relation(fields: [labelId], references: [id])
+  labelId  String
+
+  @@id([taskId, labelId])
 }
