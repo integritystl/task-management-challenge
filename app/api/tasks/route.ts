@@ -153,3 +153,48 @@ export async function GET(request: Request) {
     );
   }
 }
+
+// app/api/tasks/route.ts
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const taskId = searchParams.get('id');
+
+    if (!taskId) {
+      return NextResponse.json(
+        { error: 'Task ID is required' },
+        { status: 400 }
+      );
+    }
+
+    // First delete all TaskLabel associations for this task
+    await prisma.taskLabel.deleteMany({
+      where: {
+        taskId: taskId
+      }
+    });
+
+    // Then delete the task itself
+    const deletedTask = await prisma.task.delete({
+      where: {
+        id: taskId
+      }
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: 'Task deleted successfully',
+      data: deletedTask
+    });
+
+  } catch (error) {
+    console.error('Error deleting task:', error);
+    return NextResponse.json(
+      { 
+        error: 'Failed to delete task',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
+      { status: 500 }
+    );
+  }
+}

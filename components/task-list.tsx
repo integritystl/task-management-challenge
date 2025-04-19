@@ -40,8 +40,9 @@ export function TaskList({ initialTasks }: TaskListProps) {
   const [filters, setFilters] = useState<FilterOptions>({});
   const [availableLabels, setAvailableLabels] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [taskCount, setTaskCount] = useState(initialTasks.length); // New state for count
 
-  // Extract available labels from initial tasks
+  // Extract available labels and update count
   useEffect(() => {
     const labels = new Set<string>();
     initialTasks.forEach(task => {
@@ -50,6 +51,7 @@ export function TaskList({ initialTasks }: TaskListProps) {
       });
     });
     setAvailableLabels(Array.from(labels));
+    setTaskCount(initialTasks.length); // Initialize count
   }, [initialTasks]);
 
   // Fetch tasks when filters change
@@ -59,7 +61,6 @@ export function TaskList({ initialTasks }: TaskListProps) {
       try {
         const params = new URLSearchParams();
         
-        // Add all active filters to the URL
         if (filters.priority) {
           filters.priority.forEach(p => params.append('priority', p));
         }
@@ -73,6 +74,7 @@ export function TaskList({ initialTasks }: TaskListProps) {
         const response = await fetch(`/api/tasks?${params.toString()}`);
         const data = await response.json();
         setTasks(data);
+        setTaskCount(data.length); // Update count when filtered
       } catch (error) {
         console.error('Failed to fetch tasks:', error);
       } finally {
@@ -105,7 +107,7 @@ export function TaskList({ initialTasks }: TaskListProps) {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">
-          Tasks {!loading && `(${tasks.length})`}
+          {loading ? 'Loading tasks...' : `Tasks (${taskCount})`}
         </h2>
         <TaskFilters
           availableLabels={availableLabels}
