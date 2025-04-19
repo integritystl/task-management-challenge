@@ -1,3 +1,4 @@
+'use client'
 import { useEffect, useState } from 'react';
 import { TaskCard } from './task-card';
 import { TaskFilters } from './task-filters';
