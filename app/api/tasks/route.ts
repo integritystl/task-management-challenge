@@ -97,20 +97,42 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   try {
-    const { searchParams} = new URL(request.url)
+    const { searchParams } = new URL(request.url);
+    
+    // Extract all possible filter parameters
     const labelNames = searchParams.getAll('label');
-    const tasks = await prisma.task.findMany({
-      where: labelNames.length > 0 ? {
-        labels: {
-          some: {
-            label: {
-              name: {
-                in: labelNames
-              }
+    const statuses = searchParams.getAll('status');
+    const priorities = searchParams.getAll('priority');
+    
+    // Build the where clause dynamically based on provided filters
+    const whereClause: any = {};
+    
+    if (labelNames.length > 0) {
+      whereClause.labels = {
+        some: {
+          label: {
+            name: {
+              in: labelNames
             }
           }
         }
-      } : undefined,
+      };
+    }
+    
+    if (statuses.length > 0) {
+      whereClause.status = {
+        in: statuses
+      };
+    }
+    
+    if (priorities.length > 0) {
+      whereClause.priority = {
+        in: priorities
+      };
+    }
+    
+    const tasks = await prisma.task.findMany({
+      where: Object.keys(whereClause).length > 0 ? whereClause : undefined,
       orderBy: {
         dueDate: 'asc',
       },
@@ -122,6 +144,7 @@ export async function GET(request: Request) {
         }
       }
     });
+    
     return NextResponse.json(tasks);
   } catch (error) {
     return NextResponse.json(
