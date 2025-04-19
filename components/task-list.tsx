@@ -70,20 +70,25 @@ export function TaskList({ initialTasks }: TaskListProps) {
         if (filters.labels) {
           filters.labels.forEach(l => params.append('label', l));
         }
-
+  
         const response = await fetch(`/api/tasks?${params.toString()}`);
         const data = await response.json();
         setTasks(data);
-        setTaskCount(data.length); // Update count when filtered
+        setTaskCount(data.length);
       } catch (error) {
         console.error('Failed to fetch tasks:', error);
       } finally {
         setLoading(false);
       }
     };
-
-    fetchFilteredTasks();
+  
+    const delayDebounce = setTimeout(() => {
+      fetchFilteredTasks();
+    }, 400); // wait 400ms after last filter change
+  
+    return () => clearTimeout(delayDebounce); // clear the timeout if filters change quickly
   }, [filters]);
+  
 
   const toggleFilter = (type: keyof FilterOptions, value: string) => {
     setFilters(prev => {
