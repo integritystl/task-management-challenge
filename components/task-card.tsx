@@ -109,10 +109,11 @@ export function TaskCard({ task, onDelete }: TaskCardProps) {
         <p className="text-gray-600 mb-4">{task.description}</p>
         
         <div className="flex flex-wrap items-center gap-2">
+          {/* Status Badge with hover effect removed */}
           <Badge className={
-            task.status === 'TODO' ? 'bg-gray-100 text-gray-800 border-gray-200' :
-            task.status === 'IN_PROGRESS' ? 'bg-purple-100 text-purple-800 border-purple-200' :
-            'bg-green-100 text-green-800 border-green-200'
+            task.status === 'TODO' ? 'bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-100' :
+            task.status === 'IN_PROGRESS' ? 'bg-purple-100 text-purple-800 border-purple-200 hover:bg-purple-100' :
+            'bg-green-100 text-green-800 border-green-200 hover:bg-green-100'
           }>
             {task.status}
           </Badge>
