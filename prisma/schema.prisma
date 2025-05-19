@@ -16,4 +16,25 @@ model Task {
   dueDate     DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+
+  labels LabelsOnTasks[]
+}
+
+model Label {
+  id        String   @id @default(cuid())
+  title     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tasks LabelsOnTasks[]
+}
+
+model LabelsOnTasks {
+  task      Task     @relation(fields: [taskId], references: [id])
+  taskId    String
+  label     Label    @relation(fields: [labelId], references: [id])
+  labelId   String
+  createdAt DateTime @default(now())
+
+  @@id([taskId, labelId])
 }
