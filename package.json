@@ -1,6 +1,6 @@
 {
   "name": "task-management-challenge",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -11,8 +11,8 @@
     "test:watch": "jest --watch"
   },
   "engines": {
-    "node": ">=18",
-    "npm": ">=9",
+    "node": ">=20",
+    "npm": ">=10",
     "yarn": "please use npm",
     "pnpm": "please use npm",
     "bun": "please use npm",
