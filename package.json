@@ -1,6 +1,6 @@
 {
   "name": "task-management-challenge",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -11,8 +11,8 @@
     "test:watch": "jest --watch"
   },
   "engines": {
-    "node": ">=18",
-    "npm": ">=9",
+    "node": ">=20",
+    "npm": ">=10",
     "yarn": "please use npm",
     "pnpm": "please use npm",
     "bun": "please use npm",
@@ -73,15 +73,15 @@
     "@tailwindcss/postcss": "^4.1.8",
     "@testing-library/jest-dom": "^6.4.2",
     "@testing-library/react": "^16.0.1",
-    "@types/jest": "^29.5.12",
-    "@types/node": "22.13.10",
+    "@types/jest": "^30.0.0",
+    "@types/node": "24.0.3",
     "@types/react": "19.0.10",
     "@types/react-dom": "19.0.4",
     "autoprefixer": "10.4.21",
     "eslint": "9.22.0",
     "eslint-config-next": "15.2.2",
-    "jest": "^29.7.0",
-    "jest-environment-jsdom": "^29.7.0",
+    "jest": "^30.0.2",
+    "jest-environment-jsdom": "^30.0.2",
     "postcss": "8.5.3",
     "prisma": "^6.0.0",
     "tailwindcss": "4.1.5",
