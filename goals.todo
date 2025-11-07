@@ -1,0 +1,46 @@
+Bug Fix:
+[ ] task creation process
+	[ ] When creating a task with a due date, the date is not being stored correctly
+	[ ] causing tasks to appear in the wrong order on the dashboard.
+
+categorize tasks with labels/tags:
+
+[ ] Creating and managing labels
+	[ ] +global CRUD label UI (below header)
+[ ] Assigning labels to tasks
+	[ ] add UI to add labels to tasks
+[ ] Filtering tasks by labels
+	[ ] make global labels toggle-able
+[ ] Displaying labels on task cards
+	[ ] remove-able
+	[ ] add-able
+
+Requirements:
+Write clean, maintainable code
+Follow SOLID principles where applicable
+Use TypeScript effectively
+Make meaningful git commits
+Document your changes
+
+Bonus Points:
+Add additional features that you think would be valuable
+Include tests for your new features
+Improve the UI/UX
+Add comprehensive test coverage
+Implement performance optimizations
+Add proper error handling
+Implement proper form validation
+
+Evaluation Criteria:
+Code quality and organization
+Problem-solving approach
+Git commit history
+Test coverage
+Documentation
+UI/UX considerations
+Performance considerations
+
+Submission:
+Push your changes to your forked repository
+Create a Pull Request to the original repository
+Include a description of your changes and any decisions you made
