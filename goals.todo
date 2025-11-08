@@ -1,7 +1,8 @@
 Bug Fix:
-[ ] task creation process
-	[ ] When creating a task with a due date, the date is not being stored correctly
-	[ ] causing tasks to appear in the wrong order on the dashboard.
+[x] task creation process
+	[x] When creating a task with a due date, the date is not being stored correctly
+	[x] Store the future time as the unix time relative to the current timezone (so that it works for users in different timezones, but does not need to alter the schema due to a single user crossing timezones).
+	[x] causing tasks to appear in the wrong order on the dashboard.
 
 categorize tasks with labels/tags:
 
