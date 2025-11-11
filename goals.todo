@@ -8,8 +8,8 @@ categorize tasks with labels/tags:
 
 [ ] Add placeholder text to description fields to inform users of how to create/escape tags.
 [x] Creating and managing labels
-[ ] Filtering tasks by labels
-	[ ] make global labels toggle-able
+[x] Filtering tasks by labels
+	[x] make global labels toggle-able
 
 +UX:
 	[ ] Priority dropdown is transparent. (add bg)
