@@ -94,7 +94,11 @@ export function CreateTaskButton() {
           </div>
           <div>
             <Label htmlFor="description">Description</Label>
-            <Input id="description" {...register('description')} />
+            <Input
+              id="description"
+              placeholder="Add tags #likeThis. (Or escape \#nonTags)"
+              {...register('description')}
+            />
           </div>
           <div>
             <Label htmlFor="priority">Priority</Label>

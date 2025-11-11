@@ -6,7 +6,7 @@ Bug Fix:
 
 categorize tasks with labels/tags:
 
-[ ] Add placeholder text to description fields to inform users of how to create/escape tags.
+[x] Add placeholder text to description fields to inform users of how to create/escape tags.
 [x] Creating and managing labels
 [x] Filtering tasks by labels
 	[x] make global labels toggle-able
