@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { TaskCard } from './task-card';
 import { Task } from '@/lib/db';
+import { tasks2tags } from '@/lib/tags';
 
 interface TaskListProps {
   initialTasks: Task[];
@@ -10,6 +11,11 @@ interface TaskListProps {
 
 export function TaskList({ initialTasks }: TaskListProps) {
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
+  const [tags, setTags] = useState<string[]>([]);
+
+  useEffect(() => {
+    setTags(tasks2tags(tasks));
+  }, [tasks]);
 
   useEffect(() => {
     setTasks(initialTasks);
