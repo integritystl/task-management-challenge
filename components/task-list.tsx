@@ -54,7 +54,7 @@ export function TaskList({ initialTasks }: TaskListProps) {
   return (
     <>
       <TagToggles onToggle={onToggle} values={ToggleValues} />
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
         {displayedTasks.map((task) => (
           <TaskCard key={task.id} task={task} />
         ))}
