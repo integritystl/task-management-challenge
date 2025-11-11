@@ -8,7 +8,7 @@ export const tasks2tags = (tasks: Pick<Task, 'description'>[]) => {
     (task) =>
       task.description
         /** @note ignore escaped tags denoted with a preceding backslash */
-        ?.match(/(?<=[^\\])#[^\s]+/g)
+        ?.match(/(^#[^\s]+)|((?<=[^\\])#[^\s]+)/g) ?? []
   );
   /** @note de-duplicate & sort tags */
   return Array.from(new Set(tags)).sort();

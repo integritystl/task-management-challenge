@@ -13,7 +13,7 @@ describe('tasks2tags', () => {
       { description: 'no tags here' },
     ];
 
-    const expectedTags = ['#duplicate', '#tags'];
+    const expectedTags = ['#duplicate', '#tags', '#two'];
     const result = tasks2tags(tasks);
 
     expect(result).toEqual(expectedTags);
