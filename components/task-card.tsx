@@ -8,6 +8,8 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Task } from '@/lib/db';
+import { tasks2tags } from '@/lib/tags';
+import { EditTaskButton } from './edit-task-button';
 
 const priorityColors = {
   LOW: 'bg-blue-100 text-blue-800',
@@ -46,6 +48,14 @@ export function TaskCard({ task }: TaskCardProps) {
       <CardContent>
         <p className="text-gray-600 mb-4">{task.description}</p>
         <Badge className={statusColors[task.status as keyof typeof statusColors]}>{task.status}</Badge>
+        <div>
+          {tasks2tags([task]).map((tag) => (
+            <Badge key={tag}>{tag}</Badge>
+          ))}
+        </div>
+        <div className="flex justify-center">
+          <EditTaskButton task={task} />
+        </div>
       </CardContent>
     </Card>
   );

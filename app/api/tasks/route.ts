@@ -12,7 +12,7 @@ export async function POST(request: Request) {
         description: data.description,
         priority: data.priority,
         status: data.status,
-        dueDate: data.dueDate ? new Date(data.dueDate) : null,
+        dueDate: data.dueDate ? new Date(data.dueDate + 'T00:00:00') : null,
       },
     });
 

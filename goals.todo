@@ -1,0 +1,49 @@
+Bug Fix:
+[x] task creation process
+	[x] When creating a task with a due date, the date is not being stored correctly
+	[x] Store the future time as the unix time relative to the current timezone (so that it works for users in different timezones, but does not need to alter the schema due to a single user crossing timezones).
+	[x] causing tasks to appear in the wrong order on the dashboard.
+
+categorize tasks with labels/tags:
+
+[x] Add placeholder text to description fields to inform users of how to create/escape tags.
+[x] Creating and managing labels
+[x] Filtering tasks by labels
+	[x] make global labels toggle-able
+
++UX:
+	[x] +Update functionality
+	[ ] +Delete functionality
+	[ ] +Search functionality
+	[ ] +Undo deletion functionality with <Toast>
+	[ ] Priority dropdown is transparent. (add bg)
+
+Requirements:
+Write clean, maintainable code
+Follow SOLID principles where applicable
+Use TypeScript effectively
+Make meaningful git commits
+Document your changes
+
+Bonus Points:
+Add additional features that you think would be valuable
+Include tests for your new features
+Improve the UI/UX
+Add comprehensive test coverage
+Implement performance optimizations
+Add proper error handling
+Implement proper form validation
+
+Evaluation Criteria:
+Code quality and organization
+Problem-solving approach
+Git commit history
+Test coverage
+Documentation
+UI/UX considerations
+Performance considerations
+
+Submission:
+Push your changes to your forked repository
+Create a Pull Request to the original repository
+Include a description of your changes and any decisions you made

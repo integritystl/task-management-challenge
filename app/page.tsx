@@ -1,9 +1,9 @@
 import { TaskList } from '@/components/task-list';
-import { CreateTaskButton } from '@/components/create-task-button';
+import { EditTaskButton } from '@/components/edit-task-button';
 
 async function getTasks() {
   const res = await fetch('http://localhost:3000/api/tasks', {
-    cache: 'no-store'
+    cache: 'no-store',
   });
 
   if (!res.ok) {
@@ -20,7 +20,7 @@ export default async function Home() {
     <main className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-4xl font-bold">Task Management</h1>
-        <CreateTaskButton />
+        <EditTaskButton />
       </div>
       <TaskList initialTasks={tasks} />
     </main>
