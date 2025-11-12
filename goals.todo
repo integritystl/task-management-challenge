@@ -12,6 +12,10 @@ categorize tasks with labels/tags:
 	[x] make global labels toggle-able
 
 +UX:
+	[x] +Update functionality
+	[ ] +Delete functionality
+	[ ] +Search functionality
+	[ ] +Undo deletion functionality with <Toast>
 	[ ] Priority dropdown is transparent. (add bg)
 
 Requirements:
