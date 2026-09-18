@@ -90,6 +90,8 @@
   "overrides": {
     "find-my-way": "^9.7.0",
     "sharp": "^0.35.0",
-    "postcss": "$postcss"
+    "postcss": "$postcss",
+    "mysql2": "^3.22.0",
+    "deepmerge-ts": "^8.0.0"
   }
 }
