@@ -21,7 +21,7 @@
     "turbo": "please use npm"
   },
   "dependencies": {
-    "@hookform/resolvers": "^5.0.1",
+    "@hookform/resolvers": "^6.0.0",
     "@next/swc-wasm-nodejs": "16.4.2",
     "@prisma/adapter-better-sqlite3": "^7.9.0",
     "@prisma/client": "^7.9.0",
