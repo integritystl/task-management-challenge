@@ -21,7 +21,7 @@
     "turbo": "please use npm"
   },
   "dependencies": {
-    "@hookform/resolvers": "^5.0.1",
+    "@hookform/resolvers": "^6.0.0",
     "@next/swc-wasm-nodejs": "16.4.0",
     "@prisma/adapter-better-sqlite3": "^7.9.0",
     "@prisma/client": "^7.9.0",
@@ -78,14 +78,14 @@
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "autoprefixer": "10.6.1",
-    "eslint": "^9.39.5",
+    "eslint": "^10.13.0",
     "eslint-config-next": "16.4.0",
     "jest": "^30.0.2",
     "jest-environment-jsdom": "^30.0.2",
     "postcss": "8.5.30",
     "prisma": "^7.9.0",
     "tailwindcss": "4.3.3",
-    "typescript": "^6.0.3"
+    "typescript": "^7.0.2"
   },
   "overrides": {
     "find-my-way": "^9.7.0",
