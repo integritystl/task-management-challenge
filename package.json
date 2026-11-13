@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^7.0.2",
-    "@next/swc-wasm-nodejs": "16.4.4",
+    "@next/swc-wasm-nodejs": "16.4.6",
     "@prisma/adapter-better-sqlite3": "^7.9.0",
     "@prisma/client": "^7.9.0",
     "@radix-ui/react-accordion": "^1.2.1",
@@ -79,12 +79,12 @@
     "@types/react-dom": "19.3.0",
     "autoprefixer": "10.6.2",
     "eslint": "^9.39.5",
-    "eslint-config-next": "16.4.4",
+    "eslint-config-next": "16.4.6",
     "jest": "^30.0.2",
     "jest-environment-jsdom": "^30.0.2",
     "postcss": "8.5.32",
     "prisma": "^7.9.0",
-    "tailwindcss": "4.3.4",
+    "tailwindcss": "4.3.5",
     "typescript": "^6.0.3"
   },
   "overrides": {
